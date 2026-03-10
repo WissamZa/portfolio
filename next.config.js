@@ -1,4 +1,8 @@
 /** @type {import('next').NextConfig} */
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+})
+
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -6,8 +10,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
     ],
   },
-  experimental: {
-  },
+  experimental: {},
   async headers() {
     return [
       {
@@ -18,6 +21,6 @@ const nextConfig = {
       },
     ];
   },
-};
+}
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig)

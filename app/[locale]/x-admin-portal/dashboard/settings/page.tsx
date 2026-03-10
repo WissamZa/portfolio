@@ -14,14 +14,11 @@ export default function AdminSettings() {
 
       <div className="glass-card p-8 max-w-4xl bg-void-2 border-glass-border shadow-2xl animate-in fade-in duration-700">
         <div className="stack-auth-settings-container">
-          <Suspense fallback={
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <div className="spinner h-8 w-8" />
-              <p className="font-mono text-[10px] text-text-muted animate-pulse">LOADING SECURITY INTERFACE...</p>
-            </div>
-          }>
-            <AccountSettings />
-          </Suspense>
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <div className="spinner h-8 w-8" />
+            <p className="font-mono text-[10px] text-text-muted animate-pulse">LOADING SECURITY INTERFACE...</p>
+          </div>
+          <AccountSettings />
         </div>
       </div>
 

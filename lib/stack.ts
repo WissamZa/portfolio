@@ -14,6 +14,7 @@ export const stack = new StackServerApp({
   secretServerKey: secretServerKey || "missing-secret-key",
   publishableClientKey: publishableClientKey,
   urls: {
+    handler: "/handler",
     signIn: "/x-admin-portal",
     signUp: "/x-admin-portal",
     afterSignIn: "/x-admin-portal/dashboard",
