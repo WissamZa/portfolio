@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Terminal, Lock, AlertCircle, LogIn } from 'lucide-react';
-import { SignIn, useUser } from '@stackframe/stack';
+import { useUser, useStackApp } from '@stackframe/stack';
 
 // The admin page is hidden - users must type the secret sequence
 // This acts like a konami code puzzle
@@ -30,6 +30,7 @@ export default function AdminLoginPage() {
     '> Challenge-response required',
     '',
   ]);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,6 +40,7 @@ export default function AdminLoginPage() {
   const params = useParams();
   const locale = params.locale as string;
 
+  const app = useStackApp();
   const user = useUser();
   useEffect(() => {
     if (user) {
@@ -90,7 +92,20 @@ export default function AdminLoginPage() {
     }
   };
 
-  /* handleLogin removed in favor of Stack Auth */
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    const res = await app.signInWithCredential({ email, password });
+    if (res.status === 'ok') {
+      router.push(`/${locale}/x-admin-portal/dashboard`);
+    } else {
+      // @ts-ignore
+      setError(res.error?.message || 'Invalid credentials');
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-void flex items-center justify-center p-4 overflow-hidden">
@@ -111,9 +126,54 @@ export default function AdminLoginPage() {
 
             <div className="glass-card p-1 border-neon-cyan/30 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
               <div className="bg-void-2 p-6 md:p-8">
-                <Suspense fallback={<div className="flex justify-center py-20"><div className="cyber-spinner" /></div>}>
-                  <SignIn fullPage={false} automaticRedirect={false} />
-                </Suspense>
+                <form onSubmit={handleLogin} className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-mono uppercase text-text-muted tracking-widest">Email</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="bg-void-3 border border-neon-cyan/20 p-3 font-mono text-sm outline-none focus:border-neon-cyan transition-colors"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-mono uppercase text-text-muted tracking-widest">Password</label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="bg-void-3 border border-neon-cyan/20 p-3 font-mono text-sm outline-none focus:border-neon-cyan transition-colors"
+                      required
+                    />
+                  </div>
+
+                  {error && (
+                    <div className="flex items-center gap-2 text-red-400 font-mono text-xs bg-red-400/10 p-2 border border-red-400/20">
+                      <AlertCircle size={14} />
+                      {error}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="mt-4 flex items-center justify-center gap-2 bg-neon-cyan/10 border border-neon-cyan text-neon-cyan p-3 font-mono text-sm font-bold uppercase tracking-widest hover:bg-neon-cyan/20 transition-all disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded-full border-2 border-neon-cyan border-r-transparent animate-spin" />
+                        Authenticating...
+                      </div>
+                    ) : (
+                      <>
+                        <Lock size={16} />
+                        Access System
+                      </>
+                    )}
+                  </button>
+                </form>
               </div>
             </div>
 
@@ -128,58 +188,7 @@ export default function AdminLoginPage() {
             </div>
           </div>
 
-          <style jsx global>{`
-            .stack-auth-container {
-              --stack-primary: #00f5ff !important;
-              --stack-background: transparent !important;
-            }
-            /* Hide Stack's default branding if any */
-            [class*="stack-branding"] { display: none !important; }
-            
-            /* Customizing Stack internal components safely without breaking layout */
-            .stack-auth-container button {
-              border: 1px solid var(--neon-cyan) !important;
-              color: var(--neon-cyan) !important;
-              background: rgba(0, 245, 255, 0.05) !important;
-              font-family: 'JetBrains Mono', monospace !important;
-              font-weight: bold !important;
-              text-transform: uppercase !important;
-              letter-spacing: 0.1em !important;
-              border-radius: 0 !important;
-              transition: all 0.3s ease !important;
-            }
-            .stack-auth-container button svg {
-              display: none !important;
-            }
-            
-            /* Dynamic hover state for buttons */
-            .stack-auth-container button:hover:not(:disabled) {
-              background: rgba(0, 245, 255, 0.15) !important;
-              box-shadow: 0 0 15px rgba(0, 245, 255, 0.3), inset 0 0 10px rgba(0, 245, 255, 0.1) !important;
-              text-shadow: 0 0 8px rgba(0, 245, 255, 0.8) !important;
-              transform: translateY(-1px);
-            }
-            
-            .stack-auth-container input {
-              background: rgba(15, 15, 26, 0.8) !important;
-              border: 1px solid rgba(0, 245, 255, 0.2) !important;
-              border-radius: 0 !important;
-              color: #fff !important;
-              font-family: 'JetBrains Mono', monospace !important;
-              transition: all 0.3s ease !important;
-            }
-            .stack-auth-container input:focus {
-              border-color: #00f5ff !important;
-              box-shadow: 0 0 10px rgba(0, 245, 255, 0.2) !important;
-              outline: none !important;
-            }
-            .stack-auth-container label {
-              color: rgba(226, 232, 240, 0.6) !important;
-              font-family: 'JetBrains Mono', monospace !important;
-              font-size: 0.75rem !important;
-              text-transform: uppercase !important;
-            }
-          `}</style>
+
         </div>
       ) : (
         <div className="relative z-10 w-full max-w-2xl animate-in zoom-in-95 duration-500">
