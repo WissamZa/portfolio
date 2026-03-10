@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import { Save, Loader } from 'lucide-react';
 import { useAdminData } from '@/hooks/useAdminData';
 import type { Profile } from '@/lib/database.types';
-import { Toaster } from 'react-hot-toast';
-import AdminNav from '@/components/admin/AdminNav';
+import { AdminHeader } from '@/components/admin/AdminHeader';
 import toast from 'react-hot-toast';
 
 export default function AdminProfile() {
@@ -26,7 +25,10 @@ export default function AdminProfile() {
     try {
       if (form.id) await updateItem(form.id, form);
       else await createItem(form);
-      toast.success('Profile saved!');
+      toast.success('Profile updated successfully');
+      fetchItems();
+    } catch (err) {
+      toast.error('Failed to update profile');
     } finally {
       setSaving(false);
     }
@@ -34,13 +36,13 @@ export default function AdminProfile() {
 
   const fields = [
     { key: 'name_en', label: 'Full Name (EN)', type: 'text' },
-    { key: 'name_ar', label: 'Full Name (AR) الاسم', type: 'text', rtl: true },
+    { key: 'name_ar', label: 'Full Name (AR)', type: 'text', rtl: true },
     { key: 'title_en', label: 'Title (EN)', type: 'text' },
-    { key: 'title_ar', label: 'Title (AR) المسمى', type: 'text', rtl: true },
+    { key: 'title_ar', label: 'Title (AR)', type: 'text', rtl: true },
     { key: 'email', label: 'Email', type: 'email' },
     { key: 'phone', label: 'Phone', type: 'text' },
     { key: 'location_en', label: 'Location (EN)', type: 'text' },
-    { key: 'location_ar', label: 'Location (AR) الموقع', type: 'text', rtl: true },
+    { key: 'location_ar', label: 'Location (AR)', type: 'text', rtl: true },
     { key: 'github_url', label: 'GitHub URL', type: 'url' },
     { key: 'linkedin_url', label: 'LinkedIn URL', type: 'url' },
     { key: 'twitter_url', label: 'Twitter URL', type: 'url' },
@@ -48,50 +50,81 @@ export default function AdminProfile() {
   ];
 
   return (
-    <div className="flex h-screen bg-void">
-      <AdminNav active="profile" />
-      <Toaster position="top-right" />
-      <main className="flex-1 overflow-auto p-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold font-display text-text-primary">Profile<span className="text-neon-cyan">.</span></h1>
-            <p className="font-mono text-xs text-text-muted">Personal information in both languages</p>
-          </div>
-          <button onClick={handleSave} disabled={saving} className="btn-neon-filled px-4 py-2 font-mono text-sm flex items-center gap-2">
-            {saving ? <Loader size={16} className="animate-spin" /> : <Save size={16} />}
-            Save Changes
-          </button>
-        </div>
+    <div className="p-8">
+      <AdminHeader
+        title="Profile"
+        onAdd={handleSave}
+        addButtonLabel={saving ? "Saving..." : "Save Changes"}
+      />
 
-        {loading ? <div className="flex justify-center py-20"><div className="spinner" /></div> : (
-          <div className="max-w-3xl space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="spinner" />
+        </div>
+      ) : (
+        <div className="max-w-4xl space-y-8 animate-in fade-in duration-500">
+          <div className="glass-card p-6 border-neon-cyan/10">
+            <h3 className="font-mono text-xs text-neon-cyan uppercase tracking-widest mb-6 px-2 border-l-2 border-neon-cyan">
+              General Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {fields.map(f => (
                 <div key={f.key}>
-                  <label className="block text-xs font-mono text-text-muted mb-1">{f.label}</label>
+                  <label className="block text-[10px] font-mono text-text-muted mb-1.5 uppercase tracking-tighter">
+                    {f.label}
+                  </label>
                   <input
                     type={f.type}
-                    className={`input-neon ${f.rtl ? 'text-right font-arabic' : ''}`}
+                    className={`input-neon text-sm ${f.rtl ? 'text-right font-arabic' : 'font-mono'}`}
                     dir={f.rtl ? 'rtl' : 'ltr'}
-                    value={(form as Record<string, unknown>)[f.key] as string || ''}
-                    onChange={e => setForm({...form, [f.key]: e.target.value})}
+                    value={(form as Record<string, any>)[f.key] || ''}
+                    onChange={e => setForm({ ...form, [f.key]: e.target.value })}
                   />
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          </div>
+
+          <div className="glass-card p-6 border-neon-cyan/10">
+            <h3 className="font-mono text-xs text-neon-cyan uppercase tracking-widest mb-6 px-2 border-l-2 border-neon-cyan">
+              Biography
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-mono text-text-muted mb-1">Bio (EN)</label>
-                <textarea rows={5} className="input-neon resize-none" value={form.bio_en||''} onChange={e=>setForm({...form,bio_en:e.target.value})} />
+                <label className="block text-[10px] font-mono text-text-muted mb-1.5 uppercase tracking-tighter">Bio (EN)</label>
+                <textarea
+                  rows={5}
+                  className="input-neon resize-none text-sm font-display leading-relaxed"
+                  value={form.bio_en || ''}
+                  onChange={e => setForm({ ...form, bio_en: e.target.value })}
+                />
               </div>
               <div>
-                <label className="block text-xs font-mono text-text-muted mb-1">Bio (AR) السيرة</label>
-                <textarea rows={5} className="input-neon resize-none text-right font-arabic" dir="rtl" value={form.bio_ar||''} onChange={e=>setForm({...form,bio_ar:e.target.value})} />
+                <label className="block text-[10px] font-mono text-text-muted mb-1.5 uppercase tracking-tighter text-right">Bio (AR)</label>
+                <textarea
+                  rows={5}
+                  className="input-neon resize-none text-right font-arabic text-sm leading-relaxed"
+                  dir="rtl"
+                  value={form.bio_ar || ''}
+                  onChange={e => setForm({ ...form, bio_ar: e.target.value })}
+                />
               </div>
             </div>
           </div>
-        )}
-      </main>
+
+          <div className="flex justify-end pt-4">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="btn-neon-filled px-8 py-3 font-mono text-sm flex items-center gap-2 group relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+              {saving ? <Loader size={16} className="animate-spin" /> : <Save size={16} />}
+              <span>{saving ? 'UPDATING...' : 'UPDATE PROFILE'}</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

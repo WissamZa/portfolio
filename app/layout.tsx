@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -8,6 +9,9 @@ export const metadata: Metadata = {
   robots: 'index, follow',
 };
 
+import { stack } from '@/lib/stack';
+import { StackProvider } from '@stackframe/stack';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -15,7 +19,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body>{children}</body>
+      <body>
+        <StackProvider app={stack}>
+          <Suspense fallback={<div className="min-h-screen bg-void" />}>
+            {children}
+          </Suspense>
+        </StackProvider>
+      </body>
     </html>
   );
 }

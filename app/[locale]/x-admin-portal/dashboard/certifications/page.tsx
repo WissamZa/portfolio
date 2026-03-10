@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, X, Save, Award, ExternalLink } from 'lucide-react';
+import { Pencil, Trash2, Save, Award, ExternalLink } from 'lucide-react';
 import { useAdminData } from '@/hooks/useAdminData';
 import type { Certification } from '@/lib/database.types';
-import { cn } from '@/lib/utils';
-import { Toaster } from 'react-hot-toast';
-import AdminNav from '@/components/admin/AdminNav';
+import { AdminHeader } from '@/components/admin/AdminHeader';
+import { AdminModal } from '@/components/admin/AdminModal';
+import { CertificationForm } from './CertificationForm';
+import toast from 'react-hot-toast';
 
 const EMPTY: Partial<Certification> = {
   name_en: '', name_ar: '', issuer_en: '', issuer_ar: '',
@@ -22,53 +23,62 @@ export default function AdminCertifications() {
 
   const handleSave = async () => {
     if (!editing) return;
-    if (isNew) await createItem(editing);
-    else await updateItem(editing.id!, editing);
-    setEditing(null);
-    fetchItems();
+    try {
+      if (isNew) await createItem(editing);
+      else await updateItem(editing.id!, editing);
+      setEditing(null);
+      fetchItems();
+      toast.success(isNew ? 'Certification added' : 'Certification updated');
+    } catch (err) {
+      toast.error('Failed to save');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Delete this certification?')) {
+      try {
+        await deleteItem(id);
+        fetchItems();
+        toast.success('Certification deleted');
+      } catch (err) {
+        toast.error('Failed to delete');
+      }
+    }
   };
 
   return (
-    <div className="flex h-screen bg-void">
-      <AdminNav active="certifications" />
-      <Toaster position="top-right" />
+    <div className="p-8">
+      <AdminHeader
+        title="Certifications"
+        count={items.length}
+        itemLabel="certifications"
+        onAdd={() => { setEditing({ ...EMPTY }); setIsNew(true); }}
+        addButtonLabel="Add Certification"
+      />
 
-      <main className="flex-1 overflow-auto p-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold font-display text-text-primary">
-              Certifications<span className="text-neon-cyan">.</span>
-            </h1>
-            <p className="font-mono text-xs text-text-muted">{items.length} certifications</p>
-          </div>
-          <button
-            onClick={() => { setEditing({ ...EMPTY }); setIsNew(true); }}
-            className="btn-neon-filled px-4 py-2 font-mono text-sm flex items-center gap-2"
-          >
-            <Plus size={16} /> Add Certification
-          </button>
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="spinner" />
         </div>
-
-        {loading ? (
-          <div className="flex justify-center py-20"><div className="spinner" /></div>
-        ) : items.length === 0 ? (
-          <div className="glass-card p-12 text-center">
-            <Award size={48} className="mx-auto mb-4 text-text-muted/30" />
-            <p className="font-mono text-text-muted text-sm">No certifications yet</p>
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {items.map((cert) => (
-              <div key={cert.id} className="glass-card p-5 hover:border-neon-cyan/20 transition-all group">
-                <div className="flex items-start justify-between gap-2 mb-3">
+      ) : items.length === 0 ? (
+        <div className="glass-card p-12 text-center border-dashed border-glass-border">
+          <Award size={48} className="mx-auto mb-4 text-text-muted/30" />
+          <p className="font-mono text-text-muted text-sm uppercase tracking-widest">No certifications found</p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {items.map((cert) => (
+            <div key={cert.id} className="glass-card p-5 group hover:border-neon-cyan/20 transition-all flex flex-col justify-between">
+              <div>
+                <div className="flex items-start justify-between gap-2 mb-4">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-text-primary truncate text-sm">{cert.name_en}</h3>
-                    <p className="text-xs text-neon-cyan font-mono mt-0.5">{cert.issuer_en}</p>
+                    <h3 className="font-medium text-text-primary text-sm tracking-wide">{cert.name_en}</h3>
+                    <p className="text-[10px] text-neon-cyan font-mono uppercase mt-1">{cert.issuer_en}</p>
                     {cert.name_ar && (
-                      <p className="text-xs text-text-muted font-arabic mt-0.5 text-right" dir="rtl">{cert.name_ar}</p>
+                      <p className="text-[10px] text-text-muted font-arabic mt-1 text-right" dir="rtl">{cert.name_ar}</p>
                     )}
                   </div>
-                  <div className="flex gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => { setEditing({ ...cert }); setIsNew(false); }}
                       className="w-7 h-7 flex items-center justify-center border border-glass-border text-text-muted hover:text-neon-cyan hover:border-neon-cyan/30 transition-colors"
@@ -76,7 +86,7 @@ export default function AdminCertifications() {
                       <Pencil size={12} />
                     </button>
                     <button
-                      onClick={() => confirm('Delete this certification?') && deleteItem(cert.id)}
+                      onClick={() => handleDelete(cert.id)}
                       className="w-7 h-7 flex items-center justify-center border border-glass-border text-text-muted hover:text-red-400 hover:border-red-400/30 transition-colors"
                     >
                       <Trash2 size={12} />
@@ -84,102 +94,54 @@ export default function AdminCertifications() {
                   </div>
                 </div>
 
-                <div className="space-y-1 mt-3">
+                <div className="space-y-1.5 border-t border-glass-border/50 pt-3">
                   {cert.issue_date && (
-                    <p className="font-mono text-xs text-text-muted">
-                      Issued: {new Date(cert.issue_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
+                    <p className="font-mono text-[10px] text-text-muted flex justify-between">
+                      <span>ISSUED:</span>
+                      <span className="text-text-primary">
+                        {new Date(cert.issue_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
+                      </span>
                     </p>
                   )}
                   {cert.credential_id && (
-                    <p className="font-mono text-xs text-text-muted truncate">ID: {cert.credential_id}</p>
-                  )}
-                  {cert.credential_url && (
-                    <a
-                      href={cert.credential_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs text-neon-cyan hover:underline font-mono"
-                    >
-                      <ExternalLink size={11} /> Verify
-                    </a>
+                    <p className="font-mono text-[10px] text-text-muted flex justify-between truncate">
+                      <span>ID:</span>
+                      <span className="text-text-primary truncate ml-2">{cert.credential_id}</span>
+                    </p>
                   )}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </main>
 
-      {/* Modal */}
-      {editing && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-start justify-center overflow-auto py-8 px-4">
-          <div className="w-full max-w-2xl glass-card border border-neon-cyan/20">
-            <div className="flex items-center justify-between p-5 border-b border-glass-border">
-              <h2 className="font-mono text-neon-cyan">{isNew ? 'New Certification' : 'Edit Certification'}</h2>
-              <button onClick={() => setEditing(null)} className="text-text-muted hover:text-text-primary">
-                <X size={18} />
-              </button>
+              {cert.credential_url && (
+                <a
+                  href={cert.credential_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 flex items-center justify-center gap-2 text-[10px] text-neon-cyan hover:text-white border border-neon-cyan/20 hover:bg-neon-cyan/10 py-2 font-mono uppercase tracking-widest transition-all"
+                >
+                  <ExternalLink size={10} /> Verify Credential
+                </a>
+              )}
             </div>
-
-            <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-mono text-text-muted mb-1">Name (EN)</label>
-                  <input className="input-neon" value={editing.name_en || ''} onChange={e => setEditing({ ...editing, name_en: e.target.value })} />
-                </div>
-                <div>
-                  <label className="block text-xs font-mono text-text-muted mb-1">Name (AR) اسم</label>
-                  <input className="input-neon text-right" dir="rtl" value={editing.name_ar || ''} onChange={e => setEditing({ ...editing, name_ar: e.target.value })} />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-mono text-text-muted mb-1">Issuer (EN)</label>
-                  <input className="input-neon" value={editing.issuer_en || ''} onChange={e => setEditing({ ...editing, issuer_en: e.target.value })} />
-                </div>
-                <div>
-                  <label className="block text-xs font-mono text-text-muted mb-1">Issuer (AR) جهة</label>
-                  <input className="input-neon text-right" dir="rtl" value={editing.issuer_ar || ''} onChange={e => setEditing({ ...editing, issuer_ar: e.target.value })} />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-mono text-text-muted mb-1">Issue Date</label>
-                  <input type="date" className="input-neon" value={editing.issue_date || ''} onChange={e => setEditing({ ...editing, issue_date: e.target.value })} />
-                </div>
-                <div>
-                  <label className="block text-xs font-mono text-text-muted mb-1">Expiry Date</label>
-                  <input type="date" className="input-neon" value={editing.expiry_date || ''} onChange={e => setEditing({ ...editing, expiry_date: e.target.value })} />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono text-text-muted mb-1">Credential ID</label>
-                <input className="input-neon" value={editing.credential_id || ''} onChange={e => setEditing({ ...editing, credential_id: e.target.value })} />
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono text-text-muted mb-1">Credential URL</label>
-                <input type="url" className="input-neon" value={editing.credential_url || ''} onChange={e => setEditing({ ...editing, credential_url: e.target.value })} />
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono text-text-muted mb-1">Order Index</label>
-                <input type="number" className="input-neon" value={editing.order_index || 0} onChange={e => setEditing({ ...editing, order_index: +e.target.value })} />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 p-5 border-t border-glass-border">
-              <button onClick={() => setEditing(null)} className="btn-neon px-4 py-2 text-sm font-mono">Cancel</button>
-              <button onClick={handleSave} className="btn-neon-filled px-4 py-2 text-sm font-mono flex items-center gap-2">
-                <Save size={14} /> Save
-              </button>
-            </div>
-          </div>
+          ))}
         </div>
       )}
+
+      <AdminModal
+        title={isNew ? 'New Certification' : 'Edit Certification'}
+        isOpen={!!editing}
+        onClose={() => setEditing(null)}
+        footer={
+          <>
+            <button onClick={() => setEditing(null)} className="btn-neon px-4 py-2 text-sm font-mono">Cancel</button>
+            <button onClick={handleSave} className="btn-neon-filled px-4 py-2 text-sm font-mono flex items-center gap-2">
+              <Save size={14} /> Save
+            </button>
+          </>
+        }
+      >
+        {editing && <CertificationForm editing={editing} setEditing={setEditing} />}
+      </AdminModal>
     </div>
   );
 }

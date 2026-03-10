@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, X, Save } from 'lucide-react';
+import { Pencil, Trash2, Save } from 'lucide-react';
 import { useAdminData } from '@/hooks/useAdminData';
 import type { Skill } from '@/lib/database.types';
-import { Toaster } from 'react-hot-toast';
-import AdminNav from '@/components/admin/AdminNav';
+import { AdminHeader } from '@/components/admin/AdminHeader';
+import { AdminModal } from '@/components/admin/AdminModal';
+import { SkillForm } from './SkillForm';
+import toast from 'react-hot-toast';
 
 const EMPTY: Partial<Skill> = {
   name_en: '', name_ar: '', category: 'languages', proficiency: 80, order_index: 0
@@ -22,10 +24,27 @@ export default function AdminSkills() {
 
   const handleSave = async () => {
     if (!editing) return;
-    if (isNew) await createItem(editing);
-    else await updateItem(editing.id!, editing);
-    setEditing(null);
-    fetchItems();
+    try {
+      if (isNew) await createItem(editing);
+      else await updateItem(editing.id!, editing);
+      setEditing(null);
+      fetchItems();
+      toast.success(isNew ? 'Skill added' : 'Skill updated');
+    } catch (err) {
+      toast.error('Failed to save');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this skill?')) {
+      try {
+        await deleteItem(id);
+        fetchItems();
+        toast.success('Skill deleted');
+      } catch (err) {
+        toast.error('Failed to delete');
+      }
+    }
   };
 
   const grouped = CATEGORIES.reduce((acc, cat) => {
@@ -34,82 +53,70 @@ export default function AdminSkills() {
   }, {} as Record<string, Skill[]>);
 
   return (
-    <div className="flex h-screen bg-void">
-      <AdminNav active="skills" />
-      <Toaster position="top-right" />
-      <main className="flex-1 overflow-auto p-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold font-display text-text-primary">Skills<span className="text-neon-cyan">.</span></h1>
-            <p className="font-mono text-xs text-text-muted">{items.length} skills</p>
-          </div>
-          <button onClick={() => { setEditing({...EMPTY}); setIsNew(true); }} className="btn-neon-filled px-4 py-2 font-mono text-sm flex items-center gap-2">
-            <Plus size={16} /> Add Skill
-          </button>
-        </div>
+    <div className="p-8">
+      <AdminHeader
+        title="Skills"
+        count={items.length}
+        itemLabel="skills"
+        onAdd={() => { setEditing({ ...EMPTY }); setIsNew(true); }}
+        addButtonLabel="Add Skill"
+      />
 
-        {loading ? <div className="flex justify-center py-20"><div className="spinner" /></div> : (
-          <div className="space-y-6">
-            {CATEGORIES.filter(cat => grouped[cat].length > 0).map(cat => (
-              <div key={cat}>
-                <h3 className="font-mono text-xs text-neon-cyan uppercase tracking-widest mb-3">{cat}</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {grouped[cat].map(skill => (
-                    <div key={skill.id} className="glass-card p-4 flex items-center justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-text-primary">{skill.name_en}</div>
-                        <div className="text-xs text-text-muted font-arabic">{skill.name_ar}</div>
-                        <div className="flex items-center gap-2 mt-2">
-                          <div className="skill-bar flex-1"><div className="skill-bar-fill" style={{width:`${skill.proficiency}%`}} /></div>
-                          <span className="font-mono text-xs text-neon-cyan">{skill.proficiency}%</span>
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="spinner" />
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {CATEGORIES.filter(cat => grouped[cat].length > 0).map(cat => (
+            <div key={cat}>
+              <h3 className="font-mono text-xs text-neon-cyan uppercase tracking-[0.2em] mb-4 border-l-2 border-neon-cyan pl-3">
+                {cat}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {grouped[cat].map(skill => (
+                  <div key={skill.id} className="glass-card p-4 flex items-center justify-between gap-3 group hover:border-neon-cyan/20 transition-all">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-text-primary capitalize">{skill.name_en}</div>
+                      <div className="text-[10px] text-text-muted font-arabic mt-0.5">{skill.name_ar}</div>
+                      <div className="flex items-center gap-2 mt-3">
+                        <div className="skill-bar flex-1 h-1 bg-void-3 border border-glass-border">
+                          <div className="skill-bar-fill h-full bg-neon-cyan shadow-[0_0_8px_rgba(0,245,255,0.5)]" style={{ width: `${skill.proficiency}%` }} />
                         </div>
-                      </div>
-                      <div className="flex gap-1 shrink-0">
-                        <button onClick={() => { setEditing({...skill}); setIsNew(false); }} className="p-1.5 text-text-muted hover:text-neon-cyan"><Pencil size={13} /></button>
-                        <button onClick={() => deleteItem(skill.id)} className="p-1.5 text-text-muted hover:text-red-400"><Trash2 size={13} /></button>
+                        <span className="font-mono text-[10px] text-neon-cyan">{skill.proficiency}%</span>
                       </div>
                     </div>
-                  ))}
-                </div>
+                    <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => { setEditing({ ...skill }); setIsNew(false); }} className="p-1.5 text-text-muted hover:text-neon-cyan transition-colors">
+                        <Pencil size={13} />
+                      </button>
+                      <button onClick={() => handleDelete(skill.id)} className="p-1.5 text-text-muted hover:text-red-400 transition-colors">
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-      </main>
-
-      {editing && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-lg glass-card border border-neon-cyan/20">
-            <div className="flex items-center justify-between p-5 border-b border-glass-border">
-              <h2 className="font-mono text-neon-cyan">{isNew ? 'New Skill' : 'Edit Skill'}</h2>
-              <button onClick={() => setEditing(null)}><X size={18} className="text-text-muted" /></button>
             </div>
-            <div className="p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="block text-xs font-mono text-text-muted mb-1">Name (EN)</label>
-                  <input className="input-neon" value={editing.name_en||''} onChange={e=>setEditing({...editing,name_en:e.target.value})} /></div>
-                <div><label className="block text-xs font-mono text-text-muted mb-1">Name (AR) اسم</label>
-                  <input className="input-neon text-right" dir="rtl" value={editing.name_ar||''} onChange={e=>setEditing({...editing,name_ar:e.target.value})} /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="block text-xs font-mono text-text-muted mb-1">Category</label>
-                  <select className="input-neon" value={editing.category} onChange={e=>setEditing({...editing,category:e.target.value as Skill['category']})}>
-                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select></div>
-                <div><label className="block text-xs font-mono text-text-muted mb-1">Proficiency ({editing.proficiency}%)</label>
-                  <input type="range" min="0" max="100" className="w-full accent-neon-cyan mt-2" value={editing.proficiency||80}
-                    onChange={e=>setEditing({...editing,proficiency:+e.target.value})} /></div>
-              </div>
-              <div><label className="block text-xs font-mono text-text-muted mb-1">Order Index</label>
-                <input type="number" className="input-neon w-32" value={editing.order_index||0} onChange={e=>setEditing({...editing,order_index:+e.target.value})} /></div>
-            </div>
-            <div className="flex justify-end gap-3 p-5 border-t border-glass-border">
-              <button onClick={() => setEditing(null)} className="btn-neon px-4 py-2 text-sm font-mono">Cancel</button>
-              <button onClick={handleSave} className="btn-neon-filled px-4 py-2 text-sm font-mono flex items-center gap-2"><Save size={14} /> Save</button>
-            </div>
-          </div>
+          ))}
         </div>
       )}
+
+      <AdminModal
+        title={isNew ? 'New Skill' : 'Edit Skill'}
+        isOpen={!!editing}
+        onClose={() => setEditing(null)}
+        footer={
+          <>
+            <button onClick={() => setEditing(null)} className="btn-neon px-4 py-2 text-sm font-mono">Cancel</button>
+            <button onClick={handleSave} className="btn-neon-filled px-4 py-2 text-sm font-mono flex items-center gap-2">
+              <Save size={14} /> Save
+            </button>
+          </>
+        }
+      >
+        {editing && <SkillForm editing={editing} setEditing={setEditing} />}
+      </AdminModal>
     </div>
   );
 }

@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Terminal, Lock, AlertCircle, LogIn } from 'lucide-react';
-import { stack } from '@/lib/stack';
 import { SignIn, useUser } from '@stackframe/stack';
 
 // The admin page is hidden - users must type the secret sequence
@@ -112,7 +111,9 @@ export default function AdminLoginPage() {
 
             <div className="glass-card p-1 border-neon-cyan/30 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
               <div className="bg-void-2 p-6 md:p-8">
-                <SignIn fullPage={false} automaticRedirect={false} />
+                <Suspense fallback={<div className="flex justify-center py-20"><div className="spinner" /></div>}>
+                  <SignIn fullPage={false} automaticRedirect={false} />
+                </Suspense>
               </div>
             </div>
 

@@ -1,37 +1,38 @@
 'use client';
 
 import { AccountSettings } from '@stackframe/stack';
-import AdminNav from '@/components/admin/AdminNav';
-import { useParams } from 'next/navigation';
+import { Suspense } from 'react';
+import { AdminHeader } from '@/components/admin/AdminHeader';
 
 export default function AdminSettings() {
-    const params = useParams();
-    const locale = params.locale as string;
+  return (
+    <div className="p-8">
+      <AdminHeader
+        title="Settings"
+        itemLabel="Manage authentication and account security"
+      />
 
-    return (
-        <div className="flex min-h-screen bg-void">
-            <AdminNav active="settings" />
+      <div className="glass-card p-8 max-w-4xl bg-void-2 border-glass-border shadow-2xl animate-in fade-in duration-700">
+        <div className="stack-auth-settings-container">
+          <Suspense fallback={
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <div className="spinner h-8 w-8" />
+              <p className="font-mono text-[10px] text-text-muted animate-pulse">LOADING SECURITY INTERFACE...</p>
+            </div>
+          }>
+            <AccountSettings />
+          </Suspense>
+        </div>
+      </div>
 
-            <main className="flex-1 p-8 overflow-y-auto">
-                <header className="mb-8">
-                    <h1 className="text-2xl font-display text-text-primary tracking-wider uppercase">System Settings</h1>
-                    <p className="text-text-muted mt-1 font-mono text-sm">Manage authentication, passkeys, and account security</p>
-                </header>
-
-                <div className="glass-card p-6 max-w-4xl bg-void-2 border-glass-border">
-                    <div className="stack-auth-settings-container">
-                        <AccountSettings />
-                    </div>
-                </div>
-
-                <style jsx global>{`
+      <style jsx global>{`
           .stack-auth-settings-container {
             --stack-primary: #00f5ff;
             --stack-background: transparent;
             color: #e2e8f0;
           }
           .stack-auth-settings-container :global(*) {
-            font-family: inherit !important;
+            font-family: 'Space Mono', monospace !important;
           }
           .stack-auth-settings-container :global(h1), 
           .stack-auth-settings-container :global(h2), 
@@ -39,19 +40,25 @@ export default function AdminSettings() {
             color: #fff !important;
             font-family: 'Outfit', sans-serif !important;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.1em;
+            font-weight: 700 !important;
           }
           .stack-auth-settings-container :global(button) {
              border-radius: 0 !important;
+             text-transform: uppercase;
+             letter-spacing: 0.05em;
+             font-weight: bold !important;
           }
           .stack-auth-settings-container :global(input) {
-            background: rgba(15, 15, 26, 0.8) !important;
+            background: rgba(10, 10, 15, 0.9) !important;
             border: 1px solid rgba(0, 245, 255, 0.2) !important;
             border-radius: 0 !important;
             color: #fff !important;
           }
+          .stack-auth-settings-container :global(.st-account-settings) {
+            background: transparent !important;
+          }
         `}</style>
-            </main>
-        </div>
-    );
+    </div>
+  );
 }

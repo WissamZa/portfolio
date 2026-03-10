@@ -21,21 +21,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-import { stack } from '@/lib/stack';
-import { StackProvider } from '@stackframe/stack';
-
-import { Suspense } from 'react';
-
 export default async function LocaleLayout({ children, params }: Props) {
   const locale = (await params).locale as Locale;
   const isRTL = locale === 'ar';
   return (
     <div lang={locale} dir={isRTL ? 'rtl' : 'ltr'}>
-      <Suspense fallback={<div className="min-h-screen bg-void" />}>
-        <StackProvider app={stack}>
-          {children}
-        </StackProvider>
-      </Suspense>
+      {children}
     </div>
   );
 }
