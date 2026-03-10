@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Terminal, Lock, AlertCircle, LogIn } from 'lucide-react';
+import { Terminal, Lock, AlertCircle, LogIn, Key, Mail } from 'lucide-react';
 import { useUser, useStackApp } from '@stackframe/stack';
 
 // The admin page is hidden - users must type the secret sequence
@@ -33,7 +33,10 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const terminalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -96,6 +99,7 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setMessage('');
 
     const res = await app.signInWithCredential({ email, password });
     if (res.status === 'ok') {
@@ -105,6 +109,40 @@ export default function AdminLoginPage() {
       setError(res.error?.message || 'Invalid credentials');
       setLoading(false);
     }
+  };
+
+  const handlePasskeyLogin = async () => {
+    setPasskeyLoading(true);
+    setError('');
+    setMessage('');
+
+    const res = await app.signInWithPasskey();
+    if (res.status === 'ok') {
+      router.push(`/${locale}/x-admin-portal/dashboard`);
+    } else {
+      // @ts-ignore
+      setError(res.error?.message || 'Failed to sign in with Passkey');
+      setPasskeyLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Please enter your email to reset password');
+      return;
+    }
+    setResetLoading(true);
+    setError('');
+    setMessage('');
+
+    const res = await app.sendForgotPasswordEmail(email);
+    if (res.status === 'ok') {
+      setMessage('Password reset email sent. Please check your inbox.');
+    } else {
+      // @ts-ignore
+      setError(res.error?.message || 'Failed to send reset email');
+    }
+    setResetLoading(false);
   };
 
   return (
@@ -155,24 +193,60 @@ export default function AdminLoginPage() {
                       {error}
                     </div>
                   )}
+                  {message && (
+                    <div className="flex items-center gap-2 text-green-400 font-mono text-xs bg-green-400/10 p-2 border border-green-400/20">
+                      <AlertCircle size={14} />
+                      {message}
+                    </div>
+                  )}
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="mt-4 flex items-center justify-center gap-2 bg-neon-cyan/10 border border-neon-cyan text-neon-cyan p-3 font-mono text-sm font-bold uppercase tracking-widest hover:bg-neon-cyan/20 transition-all disabled:opacity-50"
-                  >
-                    {loading ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-full border-2 border-neon-cyan border-r-transparent animate-spin" />
-                        Authenticating...
-                      </div>
-                    ) : (
-                      <>
-                        <Lock size={16} />
-                        Access System
-                      </>
-                    )}
-                  </button>
+                  <div className="flex flex-col gap-3 mt-4">
+                    <button
+                      type="submit"
+                      disabled={loading || passkeyLoading || resetLoading}
+                      className="flex items-center justify-center gap-2 bg-neon-cyan/10 border border-neon-cyan text-neon-cyan p-3 font-mono text-sm font-bold uppercase tracking-widest hover:bg-neon-cyan/20 transition-all disabled:opacity-50"
+                    >
+                      {loading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full border-2 border-neon-cyan border-r-transparent animate-spin" />
+                          Authenticating...
+                        </div>
+                      ) : (
+                        <>
+                          <Lock size={16} />
+                          Access System
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handlePasskeyLogin}
+                      disabled={loading || passkeyLoading || resetLoading}
+                      className="flex items-center justify-center gap-2 bg-void-3 border border-text-muted/30 text-text-muted p-3 font-mono text-sm uppercase hover:text-neon-cyan hover:border-neon-cyan/50 transition-all disabled:opacity-50"
+                    >
+                      {passkeyLoading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full border-2 border-neon-cyan border-r-transparent animate-spin" />
+                          Waiting for Passkey...
+                        </div>
+                      ) : (
+                        <>
+                          <Key size={16} />
+                          Sign in with Passkey
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      disabled={loading || passkeyLoading || resetLoading}
+                      className="text-xs font-mono text-text-muted hover:text-neon-cyan underline-offset-4 hover:underline transition-colors focus:outline-none self-center pt-2"
+                    >
+                      {resetLoading ? 'Sending email...' : 'Forgot your password?'}
+                    </button>
+                  </div>
                 </form>
               </div>
             </div>
