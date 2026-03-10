@@ -58,7 +58,7 @@ export default function AdminCertifications() {
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <div className="spinner" />
+          <div className="cyber-spinner" />
         </div>
       ) : items.length === 0 ? (
         <div className="glass-card p-12 text-center border-dashed border-glass-border">

@@ -59,7 +59,7 @@ export default function AdminProfile() {
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <div className="spinner" />
+          <div className="cyber-spinner" />
         </div>
       ) : (
         <div className="max-w-4xl space-y-8 animate-in fade-in duration-500">

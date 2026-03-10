@@ -15,9 +15,9 @@ export const stack = new StackServerApp({
   publishableClientKey: publishableClientKey,
   urls: {
     handler: "/handler",
-    signIn: "/x-admin-portal",
-    signUp: "/x-admin-portal",
-    afterSignIn: "/x-admin-portal/dashboard",
-    afterSignUp: "/x-admin-portal/dashboard",
+    signIn: "/en/x-admin-portal",
+    signUp: "/en/x-admin-portal",
+    afterSignIn: "/en/x-admin-portal/dashboard",
+    afterSignUp: "/en/x-admin-portal/dashboard",
   },
 });

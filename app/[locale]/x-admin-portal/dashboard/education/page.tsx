@@ -58,7 +58,7 @@ export default function AdminEducation() {
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <div className="spinner" />
+          <div className="cyber-spinner" />
         </div>
       ) : (
         <div className="space-y-4">

@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (user === undefined) {
         return (
             <div className="flex flex-col h-screen bg-void items-center justify-center gap-4">
-                <div className="spinner shadow-[0_0_15px_rgba(0,245,255,0.5)]" />
+                <div className="cyber-spinner shadow-[0_0_15px_rgba(0,245,255,0.5)]" />
                 <p className="font-mono text-xs text-text-muted animate-pulse">VERIFYING AUTHENTICATION...</p>
             </div>
         );

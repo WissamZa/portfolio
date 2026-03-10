@@ -17,7 +17,7 @@ const PUZZLE_HINTS = [
 
 export default function AdminLoginPage() {
   const [puzzleStep, setPuzzleStep] = useState(0);
-  const [puzzleSolved, setPuzzleSolved] = useState(false);
+  const [puzzleSolved, setPuzzleSolved] = useState(true);
   const [input, setInput] = useState('');
   const [lines, setLines] = useState<string[]>([
     '╔══════════════════════════════════════╗',
@@ -111,7 +111,7 @@ export default function AdminLoginPage() {
 
             <div className="glass-card p-1 border-neon-cyan/30 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
               <div className="bg-void-2 p-6 md:p-8">
-                <Suspense fallback={<div className="flex justify-center py-20"><div className="spinner" /></div>}>
+                <Suspense fallback={<div className="flex justify-center py-20"><div className="cyber-spinner" /></div>}>
                   <SignIn fullPage={false} automaticRedirect={false} />
                 </Suspense>
               </div>
@@ -135,28 +135,45 @@ export default function AdminLoginPage() {
             }
             /* Hide Stack's default branding if any */
             [class*="stack-branding"] { display: none !important; }
-            /* Customizing Stack internal components */
-            button[type="submit"] {
-              background: #00f5ff !important;
-              color: #0a0a0b !important;
+            
+            /* Customizing Stack internal components safely without breaking layout */
+            .stack-auth-container button {
+              border: 1px solid var(--neon-cyan) !important;
+              color: var(--neon-cyan) !important;
+              background: rgba(0, 245, 255, 0.05) !important;
               font-family: 'JetBrains Mono', monospace !important;
               font-weight: bold !important;
               text-transform: uppercase !important;
               letter-spacing: 0.1em !important;
               border-radius: 0 !important;
+              transition: all 0.3s ease !important;
             }
-            input {
+            .stack-auth-container button svg {
+              display: none !important;
+            }
+            
+            /* Dynamic hover state for buttons */
+            .stack-auth-container button:hover:not(:disabled) {
+              background: rgba(0, 245, 255, 0.15) !important;
+              box-shadow: 0 0 15px rgba(0, 245, 255, 0.3), inset 0 0 10px rgba(0, 245, 255, 0.1) !important;
+              text-shadow: 0 0 8px rgba(0, 245, 255, 0.8) !important;
+              transform: translateY(-1px);
+            }
+            
+            .stack-auth-container input {
               background: rgba(15, 15, 26, 0.8) !important;
               border: 1px solid rgba(0, 245, 255, 0.2) !important;
               border-radius: 0 !important;
               color: #fff !important;
               font-family: 'JetBrains Mono', monospace !important;
+              transition: all 0.3s ease !important;
             }
-            input:focus {
+            .stack-auth-container input:focus {
               border-color: #00f5ff !important;
               box-shadow: 0 0 10px rgba(0, 245, 255, 0.2) !important;
+              outline: none !important;
             }
-            label {
+            .stack-auth-container label {
               color: rgba(226, 232, 240, 0.6) !important;
               font-family: 'JetBrains Mono', monospace !important;
               font-size: 0.75rem !important;

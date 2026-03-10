@@ -11,12 +11,47 @@ A full-featured, bilingual (Arabic/English) portfolio for Computer Science engin
 - 🔐 **Hidden Admin** — Puzzle-gated admin at `/x-admin-portal` (terminal challenge)
 - 🛡️ **Secure** — Service role for all DB ops, RLS policies, httpOnly admin cookies
 - 📊 **Full CRUD** — Projects, Skills, Experience, Education, Certifications, Messages
+- 📦 **Fast Execution** — Powered by `bun` as the primary package manager.
+
+## Application Map (Detailed Directory Structure)
+
+```text
+e:\code\cs-portfolio-nextjs\portfolio\
+├── app/                  # Next.js App Router root directory
+│   ├── [locale]/         # Dynamic locale routing (en, ar)
+│   │   ├── handler/      # API or stack handlers tailored per locale
+│   │   ├── resume/       # ATS-optimized resume generator page
+│   │   └── x-admin-portal/ # Secure admin dashboard puzzle entry & pages
+│   ├── api/              # API Routes (admin interactions, contact, external portfolio info)
+│   ├── layout.tsx        # Global layout configuration
+│   └── page.tsx          # Root page redirection
+├── components/           # Reusable UI React components
+│   ├── 3d/               # 3D interactive components (Matrix Canvas, etc.)
+│   ├── admin/            # Admin dashboard structural pieces (Sidebar, Header, Maps, Forms)
+│   ├── resume/           # Resume components (ATS generating templates)
+│   ├── sections/         # Landing page sections (About, Hero, Projects, Skills)
+│   └── ui/               # Primary UI elements (Navbar, Footer, Section Headers)
+├── database/             # PostgreSQL/Supabase schema definitions & rules
+├── hooks/                # Custom React hooks (e.g. 3D hooks, data hooks)
+├── lib/                  # Shared utilities and configurations
+│   ├── i18n.ts           # Internationalization setup and helpers
+│   ├── locales/          # Extracted translation strings (en.ts, ar.ts)
+│   ├── supabase/         # Supabase client initiators & server actions
+│   ├── utils.ts          # Helper utilities (tailwind, styling, formatting)
+│   └── database.types.ts # TypeScript definitions for DB tables
+├── public/               # Static assets (images, fonts, global icons)
+├── README.md             # Project documentation (you are here)
+├── next.config.js        # Next.js settings & bundle behaviors
+├── tailwind.config.js    # TailwindCSS custom design system logic
+├── postcss.config.js     # PostCSS styling rules
+└── package.json / bun.lock # Dependency definitions with Bun lockfile
+```
 
 ## Quick Start
 
 ### 1. Install Dependencies
 ```bash
-npm install
+bun install
 ```
 
 ### 2. Set Up Supabase
@@ -38,7 +73,7 @@ Fill in:
 
 ### 4. Run Development Server
 ```bash
-npm run dev
+bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
@@ -87,6 +122,7 @@ contact_messages → Form submissions (admin-only read)
 - **PDF**: jsPDF + html2canvas
 - **Forms**: React Hook Form + Zod
 - **i18n**: Custom locale routing
+- **Package Manager**: Bun
 
 ## Caching Strategy
 

@@ -1,0 +1,928 @@
+diff --git a/README.md b/README.md
+index 3206904..a84364b 100644
+--- a/README.md
++++ b/README.md
+@@ -11,12 +11,47 @@ A full-featured, bilingual (Arabic/English) portfolio for Computer Science engin
+ - 🔐 **Hidden Admin** — Puzzle-gated admin at `/x-admin-portal` (terminal challenge)
+ - 🛡️ **Secure** — Service role for all DB ops, RLS policies, httpOnly admin cookies
+ - 📊 **Full CRUD** — Projects, Skills, Experience, Education, Certifications, Messages
++- 📦 **Fast Execution** — Powered by `bun` as the primary package manager.
++
++## Application Map (Detailed Directory Structure)
++
++```text
++e:\code\cs-portfolio-nextjs\portfolio\
++├── app/                  # Next.js App Router root directory
++│   ├── [locale]/         # Dynamic locale routing (en, ar)
++│   │   ├── handler/      # API or stack handlers tailored per locale
++│   │   ├── resume/       # ATS-optimized resume generator page
++│   │   └── x-admin-portal/ # Secure admin dashboard puzzle entry & pages
++│   ├── api/              # API Routes (admin interactions, contact, external portfolio info)
++│   ├── layout.tsx        # Global layout configuration
++│   └── page.tsx          # Root page redirection
++├── components/           # Reusable UI React components
++│   ├── 3d/               # 3D interactive components (Matrix Canvas, etc.)
++│   ├── admin/            # Admin dashboard structural pieces (Sidebar, Header, Maps, Forms)
++│   ├── resume/           # Resume components (ATS generating templates)
++│   ├── sections/         # Landing page sections (About, Hero, Projects, Skills)
++│   └── ui/               # Primary UI elements (Navbar, Footer, Section Headers)
++├── database/             # PostgreSQL/Supabase schema definitions & rules
++├── hooks/                # Custom React hooks (e.g. 3D hooks, data hooks)
++├── lib/                  # Shared utilities and configurations
++│   ├── i18n.ts           # Internationalization setup and helpers
++│   ├── locales/          # Extracted translation strings (en.ts, ar.ts)
++│   ├── supabase/         # Supabase client initiators & server actions
++│   ├── utils.ts          # Helper utilities (tailwind, styling, formatting)
++│   └── database.types.ts # TypeScript definitions for DB tables
++├── public/               # Static assets (images, fonts, global icons)
++├── README.md             # Project documentation (you are here)
++├── next.config.js        # Next.js settings & bundle behaviors
++├── tailwind.config.js    # TailwindCSS custom design system logic
++├── postcss.config.js     # PostCSS styling rules
++└── package.json / bun.lock # Dependency definitions with Bun lockfile
++```
+ 
+ ## Quick Start
+ 
+ ### 1. Install Dependencies
+ ```bash
+-npm install
++bun install
+ ```
+ 
+ ### 2. Set Up Supabase
+@@ -38,7 +73,7 @@ Fill in:
+ 
+ ### 4. Run Development Server
+ ```bash
+-npm run dev
++bun run dev
+ ```
+ 
+ Open [http://localhost:3000](http://localhost:3000)
+@@ -87,6 +122,7 @@ contact_messages → Form submissions (admin-only read)
+ - **PDF**: jsPDF + html2canvas
+ - **Forms**: React Hook Form + Zod
+ - **i18n**: Custom locale routing
++- **Package Manager**: Bun
+ 
+ ## Caching Strategy
+ 
+diff --git a/app/[locale]/x-admin-portal/dashboard/audit-logs/page.tsx b/app/[locale]/x-admin-portal/dashboard/audit-logs/page.tsx
+index b2dfd25..33e1585 100644
+--- a/app/[locale]/x-admin-portal/dashboard/audit-logs/page.tsx
++++ b/app/[locale]/x-admin-portal/dashboard/audit-logs/page.tsx
+@@ -15,240 +15,8 @@ import {
+ } from 'lucide-react';
+ import { cn } from '@/lib/utils';
+ 
+-/* ──────────────────────────────────────────────────────────
+-   Types
+-────────────────────────────────────────────────────────── */
+-interface AuditLog {
+-    id: string;
+-    user_email: string;
+-    action: string;
+-    table_name: string;
+-    record_id: string;
+-    details: Record<string, any> | null;
+-    created_at: string;
+-}
+-
+-type RollbackStatus = 'idle' | 'loading' | 'success' | 'error';
+-
+-/* ──────────────────────────────────────────────────────────
+-   Action pill
+-────────────────────────────────────────────────────────── */
+-function ActionBadge({ action }: { action: string }) {
+-    const cfg: Record<string, { color: string; bg: string }> = {
+-        CREATE: { color: 'var(--neon-green)', bg: 'rgba(0,255,136,0.08)' },
+-        UPDATE: { color: 'var(--neon-cyan)', bg: 'rgba(0,245,255,0.08)' },
+-        DELETE: { color: '#f87171', bg: 'rgba(248,113,113,0.08)' },
+-        LOGIN: { color: 'var(--neon-purple)', bg: 'rgba(179,71,255,0.08)' },
+-        ROLLBACK: { color: 'var(--neon-orange)', bg: 'rgba(255,107,53,0.08)' },
+-    };
+-    const { color, bg } = cfg[action] ?? { color: 'rgba(255,255,255,0.4)', bg: 'transparent' };
+-    return (
+-        <span
+-            className="px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-widest border"
+-            style={{ color, background: bg, borderColor: `${color}33` }}
+-        >
+-            {action}
+-        </span>
+-    );
+-}
+-
+-/* ──────────────────────────────────────────────────────────
+-   JSON viewer
+-────────────────────────────────────────────────────────── */
+-function JsonViewer({ data }: { data: any }) {
+-    if (data === null || data === undefined) {
+-        return <span className="text-text-muted/40 italic">null</span>;
+-    }
+-    return (
+-        <pre className="font-mono text-[10px] text-neon-cyan/80 leading-relaxed whitespace-pre-wrap break-all">
+-            {JSON.stringify(data, null, 2)}
+-        </pre>
+-    );
+-}
+-
+-/* ──────────────────────────────────────────────────────────
+-   Single row
+-────────────────────────────────────────────────────────── */
+-function LogRow({ log, onRollback }: { log: AuditLog; onRollback: (id: string) => Promise<void> }) {
+-    const [expanded, setExpanded] = useState(false);
+-    const [rbStatus, setRbStatus] = useState<RollbackStatus>('idle');
+-    const [rbMsg, setRbMsg] = useState('');
+-
+-    // Is this entry already rolled back?
+-    const rolledBackAt: string | null = log.details?.rolled_back_at ?? null;
+-    // Can this entry be rolled back?
+-    const canRollback = !rolledBackAt && ['CREATE', 'UPDATE', 'DELETE'].includes(log.action);
+-
+-    const handleRollback = async (e: React.MouseEvent) => {
+-        e.stopPropagation();
+-        if (rbStatus === 'loading') return;
+-
+-        const confirmed = window.confirm(
+-            `Rollback this ${log.action} on "${log.table_name}"?\n\nThis will undo the change and cannot be undone again.`
+-        );
+-        if (!confirmed) return;
+-
+-        setRbStatus('loading');
+-        try {
+-            await onRollback(log.id);
+-            setRbStatus('success');
+-            setRbMsg('Rolled back');
+-        } catch (err: any) {
+-            setRbStatus('error');
+-            setRbMsg(err.message ?? 'Rollback failed');
+-            setTimeout(() => setRbStatus('idle'), 4000);
+-        }
+-    };
+-
+-    return (
+-        <>
+-            {/* Main row */}
+-            <tr
+-                onClick={() => setExpanded(v => !v)}
+-                className={cn(
+-                    'cursor-pointer transition-colors group border-b border-glass-border/30',
+-                    expanded ? 'bg-neon-cyan/5' : 'hover:bg-white/3',
+-                    rolledBackAt && 'opacity-60'
+-                )}
+-            >
+-                {/* Expand icon */}
+-                <td className="pl-4 pr-2 py-4 w-6">
+-                    {expanded
+-                        ? <ChevronDown size={12} className="text-neon-cyan/60" />
+-                        : <ChevronRight size={12} className="text-text-muted/30 group-hover:text-neon-cyan/40" />}
+-                </td>
+-
+-                {/* Timestamp */}
+-                <td className="px-4 py-4 whitespace-nowrap">
+-                    <span className="font-mono text-[10px] text-text-muted">
+-                        {new Date(log.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+-                    </span>
+-                </td>
+-
+-                {/* User */}
+-                <td className="px-4 py-4 whitespace-nowrap max-w-[180px]">
+-                    <span className="font-mono text-[10px] text-text-primary bg-void-3 border border-glass-border px-2 py-1 truncate block">
+-                        {log.user_email}
+-                    </span>
+-                </td>
+-
+-                {/* Action */}
+-                <td className="px-4 py-4 whitespace-nowrap">
+-                    <ActionBadge action={log.action} />
+-                </td>
+-
+-                {/* Target */}
+-                <td className="px-4 py-4 whitespace-nowrap">
+-                    <span className="font-mono text-[10px] text-text-primary uppercase tracking-tighter">
+-                        {log.table_name || 'SYSTEM'}
+-                    </span>
+-                    {log.record_id && (
+-                        <span className="text-text-muted/30 font-mono text-[9px] ml-2">
+-                            #{log.record_id.slice(0, 8)}
+-                        </span>
+-                    )}
+-                </td>
+-
+-                {/* Rollback / Status column */}
+-                <td className="px-4 py-4 whitespace-nowrap text-right" onClick={e => e.stopPropagation()}>
+-                    {rolledBackAt ? (
+-                        /* Rolled-back stamp */
+-                        <div className="flex items-center justify-end gap-1.5">
+-                            <RotateCcw size={10} className="text-neon-orange/60" />
+-                            <span className="font-mono text-[9px] text-neon-orange/80 uppercase tracking-widest">
+-                                Rolled back
+-                            </span>
+-                        </div>
+-                    ) : canRollback ? (
+-                        /* Rollback button */
+-                        <button
+-                            onClick={handleRollback}
+-                            disabled={rbStatus === 'loading' || rbStatus === 'success'}
+-                            className={cn(
+-                                'flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-widest px-3 py-1.5 border transition-all duration-200',
+-                                rbStatus === 'success'
+-                                    ? 'border-neon-green/30 text-neon-green cursor-default'
+-                                    : rbStatus === 'error'
+-                                        ? 'border-red-400/30 text-red-400 cursor-default'
+-                                        : 'border-glass-border text-text-muted hover:border-neon-orange/50 hover:text-neon-orange hover:bg-neon-orange/5'
+-                            )}
+-                        >
+-                            {rbStatus === 'loading' && <Loader2 size={10} className="animate-spin" />}
+-                            {rbStatus === 'success' && <CheckCircle size={10} />}
+-                            {rbStatus === 'error' && <AlertTriangle size={10} />}
+-                            {rbStatus === 'idle' && <RotateCcw size={10} />}
+-                            {rbStatus === 'idle' ? 'Rollback' : rbMsg || 'Rollback'}
+-                        </button>
+-                    ) : null}
+-                </td>
+-            </tr>
+-
+-            {/* Expanded detail row */}
+-            {expanded && (
+-                <tr className="bg-void-3 border-b border-glass-border/30">
+-                    <td colSpan={6} className="px-6 py-0">
+-                        <div
+-                            className="overflow-hidden transition-all duration-300"
+-                            style={{ maxHeight: expanded ? '600px' : '0' }}
+-                        >
+-                            <div className="py-5 space-y-4">
+-
+-                                {/* Rolled-back banner */}
+-                                {rolledBackAt && (
+-                                    <div className="flex items-center gap-3 p-3 border border-neon-orange/20 bg-neon-orange/5">
+-                                        <RotateCcw size={13} className="text-neon-orange shrink-0" />
+-                                        <div>
+-                                            <p className="font-mono text-xs text-neon-orange font-bold uppercase tracking-widest">
+-                                                This entry has been rolled back
+-                                            </p>
+-                                            <p className="font-mono text-[10px] text-neon-orange/70 mt-0.5">
+-                                                Reversed on{' '}
+-                                                {new Date(rolledBackAt).toLocaleString([], { dateStyle: 'long', timeStyle: 'medium' })}
+-                                            </p>
+-                                        </div>
+-                                    </div>
+-                                )}
+-
+-                                {/* Detail grid */}
+-                                <div className="grid grid-cols-2 gap-4">
+-                                    {/* Left: full record_id */}
+-                                    <div className="space-y-1">
+-                                        <p className="font-mono text-[10px] text-text-muted/50 uppercase tracking-widest">
+-                                            Record ID
+-                                        </p>
+-                                        <p className="font-mono text-[11px] text-text-primary break-all">
+-                                            {log.record_id || '—'}
+-                                        </p>
+-                                    </div>
+-
+-                                    {/* Right: time */}
+-                                    <div className="space-y-1">
+-                                        <p className="font-mono text-[10px] text-text-muted/50 uppercase tracking-widest">
+-                                            Timestamp
+-                                        </p>
+-                                        <p className="font-mono text-[11px] text-text-primary">
+-                                            {new Date(log.created_at).toLocaleString([], { dateStyle: 'long', timeStyle: 'long' })}
+-                                        </p>
+-                                    </div>
+-                                </div>
+-
+-                                {/* Details JSON */}
+-                                <div className="space-y-2">
+-                                    <p className="font-mono text-[10px] text-text-muted/50 uppercase tracking-widest">
+-                                        Details payload
+-                                    </p>
+-                                    <div className="bg-void-2 border border-glass-border p-4 max-h-72 overflow-y-auto">
+-                                        <JsonViewer data={log.details} />
+-                                    </div>
+-                                </div>
+-                            </div>
+-                        </div>
+-                    </td>
+-                </tr>
+-            )}
+-        </>
+-    );
+-}
++import { AuditLog } from './types';
++import { LogRow } from './components';
+ 
+ /* ──────────────────────────────────────────────────────────
+    Page
+@@ -425,7 +193,7 @@ export default function AuditLogsPage() {
+                                 <tr>
+                                     <td colSpan={6} className="px-6 py-16 text-center">
+                                         <div className="flex flex-col items-center gap-3">
+-                                            <div className="spinner h-6 w-6" />
++                                            <div className="cyber-spinner h-6 w-6" />
+                                             <p className="font-mono text-[10px] text-text-muted uppercase tracking-widest animate-pulse">
+                                                 Reading security registry…
+                                             </p>
+diff --git a/app/[locale]/x-admin-portal/dashboard/certifications/page.tsx b/app/[locale]/x-admin-portal/dashboard/certifications/page.tsx
+index 4ca0575..81c0b87 100644
+--- a/app/[locale]/x-admin-portal/dashboard/certifications/page.tsx
++++ b/app/[locale]/x-admin-portal/dashboard/certifications/page.tsx
+@@ -58,7 +58,7 @@ export default function AdminCertifications() {
+ 
+       {loading ? (
+         <div className="flex justify-center py-20">
+-          <div className="spinner" />
++          <div className="cyber-spinner" />
+         </div>
+       ) : items.length === 0 ? (
+         <div className="glass-card p-12 text-center border-dashed border-glass-border">
+diff --git a/app/[locale]/x-admin-portal/dashboard/education/page.tsx b/app/[locale]/x-admin-portal/dashboard/education/page.tsx
+index 12b9b01..4292b9f 100644
+--- a/app/[locale]/x-admin-portal/dashboard/education/page.tsx
++++ b/app/[locale]/x-admin-portal/dashboard/education/page.tsx
+@@ -58,7 +58,7 @@ export default function AdminEducation() {
+ 
+       {loading ? (
+         <div className="flex justify-center py-20">
+-          <div className="spinner" />
++          <div className="cyber-spinner" />
+         </div>
+       ) : (
+         <div className="space-y-4">
+diff --git a/app/[locale]/x-admin-portal/dashboard/experience/page.tsx b/app/[locale]/x-admin-portal/dashboard/experience/page.tsx
+index e227484..d08e260 100644
+--- a/app/[locale]/x-admin-portal/dashboard/experience/page.tsx
++++ b/app/[locale]/x-admin-portal/dashboard/experience/page.tsx
+@@ -59,7 +59,7 @@ export default function AdminExperience() {
+ 
+       {loading ? (
+         <div className="flex justify-center py-20">
+-          <div className="spinner" />
++          <div className="cyber-spinner" />
+         </div>
+       ) : (
+         <div className="space-y-4">
+diff --git a/app/[locale]/x-admin-portal/dashboard/layout.tsx b/app/[locale]/x-admin-portal/dashboard/layout.tsx
+index 6937162..c5eafb9 100644
+--- a/app/[locale]/x-admin-portal/dashboard/layout.tsx
++++ b/app/[locale]/x-admin-portal/dashboard/layout.tsx
+@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
+     if (user === undefined) {
+         return (
+             <div className="flex flex-col h-screen bg-void items-center justify-center gap-4">
+-                <div className="spinner shadow-[0_0_15px_rgba(0,245,255,0.5)]" />
++                <div className="cyber-spinner shadow-[0_0_15px_rgba(0,245,255,0.5)]" />
+                 <p className="font-mono text-xs text-text-muted animate-pulse">VERIFYING AUTHENTICATION...</p>
+             </div>
+         );
+diff --git a/app/[locale]/x-admin-portal/dashboard/messages/page.tsx b/app/[locale]/x-admin-portal/dashboard/messages/page.tsx
+index 26a51c3..8678f92 100644
+--- a/app/[locale]/x-admin-portal/dashboard/messages/page.tsx
++++ b/app/[locale]/x-admin-portal/dashboard/messages/page.tsx
+@@ -48,7 +48,7 @@ export default function AdminMessages() {
+ 
+       {loading ? (
+         <div className="flex justify-center py-20">
+-          <div className="spinner" />
++          <div className="cyber-spinner" />
+         </div>
+       ) : (
+         <div className="space-y-3">
+diff --git a/app/[locale]/x-admin-portal/dashboard/profile/page.tsx b/app/[locale]/x-admin-portal/dashboard/profile/page.tsx
+index d878a34..c5cca8a 100644
+--- a/app/[locale]/x-admin-portal/dashboard/profile/page.tsx
++++ b/app/[locale]/x-admin-portal/dashboard/profile/page.tsx
+@@ -59,7 +59,7 @@ export default function AdminProfile() {
+ 
+       {loading ? (
+         <div className="flex justify-center py-20">
+-          <div className="spinner" />
++          <div className="cyber-spinner" />
+         </div>
+       ) : (
+         <div className="max-w-4xl space-y-8 animate-in fade-in duration-500">
+diff --git a/app/[locale]/x-admin-portal/dashboard/projects/page.tsx b/app/[locale]/x-admin-portal/dashboard/projects/page.tsx
+index 2571d9c..9aecf75 100644
+--- a/app/[locale]/x-admin-portal/dashboard/projects/page.tsx
++++ b/app/[locale]/x-admin-portal/dashboard/projects/page.tsx
+@@ -60,7 +60,7 @@ export default function AdminProjects() {
+ 
+       {loading ? (
+         <div className="flex justify-center py-20">
+-          <div className="spinner" />
++          <div className="cyber-spinner" />
+         </div>
+       ) : (
+         <div className="grid gap-4">
+diff --git a/app/[locale]/x-admin-portal/dashboard/settings/page.tsx b/app/[locale]/x-admin-portal/dashboard/settings/page.tsx
+index b4fe8cb..7ccf853 100644
+--- a/app/[locale]/x-admin-portal/dashboard/settings/page.tsx
++++ b/app/[locale]/x-admin-portal/dashboard/settings/page.tsx
+@@ -17,171 +17,21 @@ import {
+   Mail,
+   LogOut,
+   Trash2,
+-  ChevronRight,
+   Fingerprint,
+   Plus,
+   X,
+ } from 'lucide-react';
+ import { AdminHeader } from '@/components/admin/AdminHeader';
+ 
+-/* ─── tiny helper ─── */
+-type Status = 'idle' | 'loading' | 'success' | 'error';
+-
+-function StatusBadge({ status, msg }: { status: Status; msg?: string }) {
+-  if (status === 'idle') return null;
+-  const map: Record<Exclude<Status, 'idle'>, { icon: React.ReactNode; color: string }> = {
+-    loading: { icon: <Loader2 size={14} className="animate-spin" />, color: 'text-neon-cyan' },
+-    success: { icon: <CheckCircle size={14} />, color: 'text-neon-green' },
+-    error: { icon: <AlertTriangle size={14} />, color: 'text-red-400' },
+-  };
+-  const { icon, color } = map[status as Exclude<Status, 'idle'>];
+-  return (
+-    <span className={`flex items-center gap-1.5 font-mono text-xs ${color}`}>
+-      {icon} {msg}
+-    </span>
+-  );
+-}
+-
+-/* ─── Section wrapper ─── */
+-function Section({
+-  icon: Icon,
+-  title,
+-  accent = 'cyan',
+-  children,
+-}: {
+-  icon: React.ElementType;
+-  title: string;
+-  accent?: 'cyan' | 'purple' | 'green' | 'orange';
+-  children: React.ReactNode;
+-}) {
+-  const accentVars: Record<string, string> = {
+-    cyan: 'var(--neon-cyan)',
+-    purple: 'var(--neon-purple)',
+-    green: 'var(--neon-green)',
+-    orange: 'var(--neon-orange)',
+-  };
+-  const color = accentVars[accent];
+-
+-  return (
+-    <div
+-      className="glass-card rounded-none overflow-hidden"
+-      style={{ borderColor: `color-mix(in srgb, ${color} 20%, transparent)` }}
+-    >
+-      {/* Section header bar */}
+-      <div
+-        className="flex items-center gap-3 px-6 py-4 border-b"
+-        style={{
+-          background: `linear-gradient(90deg, color-mix(in srgb, ${color} 8%, transparent), transparent)`,
+-          borderColor: `color-mix(in srgb, ${color} 20%, transparent)`,
+-        }}
+-      >
+-        <div
+-          className="w-8 h-8 flex items-center justify-center border"
+-          style={{ borderColor: `color-mix(in srgb, ${color} 40%, transparent)`, color }}
+-        >
+-          <Icon size={15} />
+-        </div>
+-        <h2
+-          className="font-mono text-sm font-bold tracking-widest uppercase"
+-          style={{ color }}
+-        >
+-          {title}
+-        </h2>
+-        <div className="flex-1 h-px ml-2" style={{ background: `linear-gradient(90deg, ${color}33, transparent)` }} />
+-      </div>
+-
+-      <div className="p-6 space-y-5">{children}</div>
+-    </div>
+-  );
+-}
+-
+-/* ─── Field row ─── */
+-function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
+-  return (
+-    <div className="space-y-1.5">
+-      <label className="font-mono text-[11px] text-text-muted uppercase tracking-widest">{label}</label>
+-      {children}
+-      {hint && <p className="font-mono text-[10px] text-text-muted/60">{hint}</p>}
+-    </div>
+-  );
+-}
+-
+-/* ─── Input ─── */
+-function NeonInput(props: React.InputHTMLAttributes<HTMLInputElement> & { accent?: string }) {
+-  const { accent = 'var(--neon-cyan)', className = '', ...rest } = props;
+-  return (
+-    <input
+-      {...rest}
+-      className={`w-full bg-void-2 border border-glass-border text-text-primary font-mono text-sm px-4 py-2.5
+-        focus:outline-none transition-all duration-200 placeholder:text-text-muted/40 ${className}`}
+-      style={{
+-        // @ts-ignore
+-        '--tw-ring-color': accent,
+-      }}
+-      onFocus={e => {
+-        e.currentTarget.style.borderColor = accent;
+-        e.currentTarget.style.boxShadow = `0 0 0 1px ${accent}22, 0 0 16px ${accent}11`;
+-      }}
+-      onBlur={e => {
+-        e.currentTarget.style.borderColor = '';
+-        e.currentTarget.style.boxShadow = '';
+-      }}
+-    />
+-  );
+-}
+-
+-/* ─── Danger button ─── */
+-function DangerButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+-  return (
+-    <button
+-      onClick={onClick}
+-      className="flex items-center gap-2 border border-red-500/30 text-red-400 font-mono text-xs px-4 py-2.5
+-        hover:bg-red-500/10 hover:border-red-500/60 transition-all duration-200 uppercase tracking-widest"
+-    >
+-      {children}
+-    </button>
+-  );
+-}
+-
+-/* ─── Primary button ─── */
+-function PrimaryButton({
+-  onClick,
+-  children,
+-  status,
+-  accent = 'cyan',
+-}: {
+-  onClick: () => void;
+-  children: React.ReactNode;
+-  status?: Status;
+-  accent?: 'cyan' | 'purple' | 'green';
+-}) {
+-  const accentVars: Record<string, string> = {
+-    cyan: 'var(--neon-cyan)',
+-    purple: 'var(--neon-purple)',
+-    green: 'var(--neon-green)',
+-  };
+-  const color = accentVars[accent];
+-  const disabled = status === 'loading';
+-
+-  return (
+-    <button
+-      onClick={onClick}
+-      disabled={disabled}
+-      className="flex items-center gap-2 font-mono text-xs px-5 py-2.5 uppercase tracking-widest
+-        transition-all duration-200 disabled:opacity-50"
+-      style={{
+-        border: `1px solid ${color}`,
+-        color,
+-        background: disabled ? `${color}10` : 'transparent',
+-      }}
+-      onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = `${color}15`; }}
+-      onMouseLeave={e => { e.currentTarget.style.background = disabled ? `${color}10` : 'transparent'; }}
+-    >
+-      {status === 'loading' ? <Loader2 size={13} className="animate-spin" /> : null}
+-      {children}
+-    </button>
+-  );
+-}
++import {
++  Status,
++  StatusBadge,
++  Section,
++  Field,
++  NeonInput,
++  DangerButton,
++  PrimaryButton
++} from './SettingsUI';
+ 
+ /* ══════════════════════════════════════════════
+    MAIN PAGE
+diff --git a/app/[locale]/x-admin-portal/dashboard/skills/page.tsx b/app/[locale]/x-admin-portal/dashboard/skills/page.tsx
+index edefbeb..8788744 100644
+--- a/app/[locale]/x-admin-portal/dashboard/skills/page.tsx
++++ b/app/[locale]/x-admin-portal/dashboard/skills/page.tsx
+@@ -64,7 +64,7 @@ export default function AdminSkills() {
+ 
+       {loading ? (
+         <div className="flex justify-center py-20">
+-          <div className="spinner" />
++          <div className="cyber-spinner" />
+         </div>
+       ) : (
+         <div className="space-y-8">
+diff --git a/app/[locale]/x-admin-portal/page.tsx b/app/[locale]/x-admin-portal/page.tsx
+index 7e69966..13e6f33 100644
+--- a/app/[locale]/x-admin-portal/page.tsx
++++ b/app/[locale]/x-admin-portal/page.tsx
+@@ -17,7 +17,7 @@ const PUZZLE_HINTS = [
+ 
+ export default function AdminLoginPage() {
+   const [puzzleStep, setPuzzleStep] = useState(0);
+-  const [puzzleSolved, setPuzzleSolved] = useState(false);
++  const [puzzleSolved, setPuzzleSolved] = useState(true);
+   const [input, setInput] = useState('');
+   const [lines, setLines] = useState<string[]>([
+     '╔══════════════════════════════════════╗',
+@@ -111,7 +111,7 @@ export default function AdminLoginPage() {
+ 
+             <div className="glass-card p-1 border-neon-cyan/30 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+               <div className="bg-void-2 p-6 md:p-8">
+-                <Suspense fallback={<div className="flex justify-center py-20"><div className="spinner" /></div>}>
++                <Suspense fallback={<div className="flex justify-center py-20"><div className="cyber-spinner" /></div>}>
+                   <SignIn fullPage={false} automaticRedirect={false} />
+                 </Suspense>
+               </div>
+@@ -135,28 +135,42 @@ export default function AdminLoginPage() {
+             }
+             /* Hide Stack's default branding if any */
+             [class*="stack-branding"] { display: none !important; }
+-            /* Customizing Stack internal components */
+-            button[type="submit"] {
+-              background: #00f5ff !important;
+-              color: #0a0a0b !important;
++            
++            /* Customizing Stack internal components safely without breaking layout */
++            .stack-auth-container button {
++              border: 1px solid var(--neon-cyan) !important;
++              color: var(--neon-cyan) !important;
++              background: rgba(0, 245, 255, 0.05) !important;
+               font-family: 'JetBrains Mono', monospace !important;
+               font-weight: bold !important;
+               text-transform: uppercase !important;
+               letter-spacing: 0.1em !important;
+               border-radius: 0 !important;
++              transition: all 0.3s ease !important;
+             }
+-            input {
++            
++            /* Dynamic hover state for buttons */
++            .stack-auth-container button:hover:not(:disabled) {
++              background: rgba(0, 245, 255, 0.15) !important;
++              box-shadow: 0 0 15px rgba(0, 245, 255, 0.3), inset 0 0 10px rgba(0, 245, 255, 0.1) !important;
++              text-shadow: 0 0 8px rgba(0, 245, 255, 0.8) !important;
++              transform: translateY(-1px);
++            }
++            
++            .stack-auth-container input {
+               background: rgba(15, 15, 26, 0.8) !important;
+               border: 1px solid rgba(0, 245, 255, 0.2) !important;
+               border-radius: 0 !important;
+               color: #fff !important;
+               font-family: 'JetBrains Mono', monospace !important;
++              transition: all 0.3s ease !important;
+             }
+-            input:focus {
++            .stack-auth-container input:focus {
+               border-color: #00f5ff !important;
+               box-shadow: 0 0 10px rgba(0, 245, 255, 0.2) !important;
++              outline: none !important;
+             }
+-            label {
++            .stack-auth-container label {
+               color: rgba(226, 232, 240, 0.6) !important;
+               font-family: 'JetBrains Mono', monospace !important;
+               font-size: 0.75rem !important;
+diff --git a/app/globals.css b/app/globals.css
+index 722fedf..58387e5 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -262,7 +262,7 @@
+     z-index: 1;
+   }
+ 
+-  .spinner {
++  .cyber-spinner {
+     width: 40px;
+     height: 40px;
+     border: 2px solid rgba(0, 245, 255, 0.1);
+diff --git a/lib/i18n.ts b/lib/i18n.ts
+index e179721..0379e73 100644
+--- a/lib/i18n.ts
++++ b/lib/i18n.ts
+@@ -1,208 +1,11 @@
+ import type { Locale } from './database.types';
+ 
++import { en } from './locales/en';
++import { ar } from './locales/ar';
++
+ export const translations = {
+-  en: {
+-    nav: {
+-      home: 'Home',
+-      about: 'About',
+-      projects: 'Projects',
+-      skills: 'Skills',
+-      experience: 'Experience',
+-      education: 'Education',
+-      contact: 'Contact',
+-      console: 'Console',
+-      resume: 'Resume',
+-    },
+-    hero: {
+-      greeting: 'Hello, World.',
+-      available: 'Available for opportunities',
+-      viewWork: 'View My Work',
+-      downloadCV: 'Download CV',
+-      scrollDown: 'Scroll Down',
+-    },
+-    about: {
+-      title: 'About Me',
+-      subtitle: 'The architect behind the code',
+-    },
+-    projects: {
+-      title: 'Projects',
+-      subtitle: 'Things I\'ve built',
+-      viewAll: 'View All Projects',
+-      viewCode: 'View Code',
+-      liveDemo: 'Live Demo',
+-      featured: 'Featured',
+-      status: {
+-        completed: 'Completed',
+-        in_progress: 'In Progress',
+-        archived: 'Archived',
+-      },
+-    },
+-    skills: {
+-      title: 'Skills',
+-      subtitle: 'My technical arsenal',
+-      categories: {
+-        languages: 'Programming Languages',
+-        frameworks: 'Frameworks & Libraries',
+-        databases: 'Databases',
+-        tools: 'Dev Tools',
+-        cloud: 'Cloud & DevOps',
+-        other: 'Other',
+-      },
+-    },
+-    experience: {
+-      title: 'Experience',
+-      subtitle: 'My professional journey',
+-      present: 'Present',
+-    },
+-    education: {
+-      title: 'Education',
+-      subtitle: 'Academic background',
+-      gpa: 'GPA',
+-    },
+-    contact: {
+-      title: 'Contact',
+-      subtitle: 'Let\'s build something together',
+-      name: 'Your Name',
+-      email: 'Your Email',
+-      subject: 'Subject',
+-      message: 'Message',
+-      send: 'Send Message',
+-      sending: 'Sending...',
+-      success: 'Message sent successfully!',
+-      error: 'Failed to send message. Please try again.',
+-    },
+-    resume: {
+-      title: 'Resume',
+-      download: 'Download PDF',
+-      preview: 'Preview',
+-      generate: 'Generate ATS Resume',
+-      atsOptimized: 'ATS Optimized',
+-      language: 'Language',
+-    },
+-    admin: {
+-      login: 'Admin Login',
+-      password: 'Password',
+-      enterPassword: 'Enter admin password',
+-      signIn: 'Sign In',
+-      dashboard: 'Dashboard',
+-      totalProjects: 'Total Projects',
+-      totalMessages: 'Messages',
+-      unreadMessages: 'Unread',
+-      skills: 'Skills',
+-      addNew: 'Add New',
+-      edit: 'Edit',
+-      delete: 'Delete',
+-      save: 'Save',
+-      cancel: 'Cancel',
+-      confirmDelete: 'Are you sure you want to delete this?',
+-      logout: 'Logout',
+-    },
+-    footer: {
+-      builtWith: 'Built with Next.js & Supabase',
+-      rights: 'All rights reserved',
+-    },
+-  },
+-  ar: {
+-    nav: {
+-      home: 'الرئيسية',
+-      about: 'عنّي',
+-      projects: 'المشاريع',
+-      skills: 'المهارات',
+-      experience: 'الخبرات',
+-      education: 'التعليم',
+-      contact: 'تواصل',
+-      console: 'غرفة العمليات',
+-      resume: 'السيرة الذاتية',
+-    },
+-    hero: {
+-      greeting: 'مرحباً بالعالم.',
+-      available: 'متاح للفرص',
+-      viewWork: 'اعرض أعمالي',
+-      downloadCV: 'تحميل السيرة الذاتية',
+-      scrollDown: 'اسحب للأسفل',
+-    },
+-    about: {
+-      title: 'عنّي',
+-      subtitle: 'المهندس خلف الكود',
+-    },
+-    projects: {
+-      title: 'المشاريع',
+-      subtitle: 'ما بنيته',
+-      viewAll: 'عرض جميع المشاريع',
+-      viewCode: 'عرض الكود',
+-      liveDemo: 'عرض مباشر',
+-      featured: 'مميز',
+-      status: {
+-        completed: 'مكتمل',
+-        in_progress: 'قيد التطوير',
+-        archived: 'مؤرشف',
+-      },
+-    },
+-    skills: {
+-      title: 'المهارات',
+-      subtitle: 'ترسانتي التقنية',
+-      categories: {
+-        languages: 'لغات البرمجة',
+-        frameworks: 'الأطر والمكتبات',
+-        databases: 'قواعد البيانات',
+-        tools: 'أدوات التطوير',
+-        cloud: 'السحابة والـ DevOps',
+-        other: 'أخرى',
+-      },
+-    },
+-    experience: {
+-      title: 'الخبرات',
+-      subtitle: 'مسيرتي المهنية',
+-      present: 'حتى الآن',
+-    },
+-    education: {
+-      title: 'التعليم',
+-      subtitle: 'الخلفية الأكاديمية',
+-      gpa: 'المعدل التراكمي',
+-    },
+-    contact: {
+-      title: 'تواصل',
+-      subtitle: 'لنبني شيئاً معاً',
+-      name: 'اسمك',
+-      email: 'بريدك الإلكتروني',
+-      subject: 'الموضوع',
+-      message: 'الرسالة',
+-      send: 'أرسل الرسالة',
+-      sending: 'جاري الإرسال...',
+-      success: 'تم إرسال الرسالة بنجاح!',
+-      error: 'فشل الإرسال. يرجى المحاولة مجدداً.',
+-    },
+-    resume: {
+-      title: 'السيرة الذاتية',
+-      download: 'تحميل PDF',
+-      preview: 'معاينة',
+-      generate: 'إنشاء سيرة ذاتية ATS',
+-      atsOptimized: 'محسّنة لـ ATS',
+-      language: 'اللغة',
+-    },
+-    admin: {
+-      login: 'دخول الإدارة',
+-      password: 'كلمة المرور',
+-      enterPassword: 'أدخل كلمة مرور الإدارة',
+-      signIn: 'تسجيل الدخول',
+-      dashboard: 'لوحة التحكم',
+-      totalProjects: 'إجمالي المشاريع',
+-      totalMessages: 'الرسائل',
+-      unreadMessages: 'غير مقروءة',
+-      skills: 'المهارات',
+-      addNew: 'إضافة جديد',
+-      edit: 'تعديل',
+-      delete: 'حذف',
+-      save: 'حفظ',
+-      cancel: 'إلغاء',
+-      confirmDelete: 'هل أنت متأكد من الحذف؟',
+-      logout: 'تسجيل خروج',
+-    },
+-    footer: {
+-      builtWith: 'مبني بـ Next.js و Supabase',
+-      rights: 'جميع الحقوق محفوظة',
+-    },
+-  },
++  en,
++  ar,
+ } as const;
+ 
+ export type TranslationKeys = typeof translations.en;
+diff --git a/next.config.js b/next.config.js
+index 9b71a94..d08c29c 100644
+--- a/next.config.js
++++ b/next.config.js
+@@ -1,4 +1,5 @@
+ /** @type {import('next').NextConfig} */
++// eslint-disable-next-line @typescript-eslint/no-require-imports
+ const withBundleAnalyzer = require('@next/bundle-analyzer')({
+   enabled: process.env.ANALYZE === 'true',
+ })

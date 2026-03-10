@@ -1,0 +1,22 @@
+[
+  {
+    "p": "app\\[locale]\\x-admin-portal\\dashboard\\audit-logs\\page.tsx",
+    "size": 23912
+  },
+  {
+    "p": "app\\[locale]\\x-admin-portal\\dashboard\\settings\\page.tsx",
+    "size": 21856
+  },
+  {
+    "p": "app\\[locale]\\x-admin-portal\\dashboard\\projects\\ProjectForm.tsx",
+    "size": 9664
+  },
+  {
+    "p": "app\\[locale]\\x-admin-portal\\page.tsx",
+    "size": 9348
+  },
+  {
+    "p": "components\\sections\\HeroSection.tsx",
+    "size": 9141
+  }
+]

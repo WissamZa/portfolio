@@ -60,7 +60,7 @@ export default function AdminProjects() {
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <div className="spinner" />
+          <div className="cyber-spinner" />
         </div>
       ) : (
         <div className="grid gap-4">
