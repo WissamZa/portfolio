@@ -84,12 +84,18 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json();
   const updateData = { ...body, updated_at: new Date().toISOString() };
 
+  // Snapshot previous record for rollback
+  const { data: previousRecord } = await supabaseAdmin.from(table as any).select('*').eq('id', id).single();
+
   const { data, error } = await supabaseAdmin.from(table as any).update(updateData as never).eq('id', id).select().single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Log audit
-  await logAudit('UPDATE', table, id, body);
+  // Log audit (include previous_data for rollback support)
+  await logAudit('UPDATE', table, id, {
+    new_data: body,
+    previous_data: previousRecord ?? null,
+  });
 
   invalidateCache('portfolio:');
 
@@ -109,12 +115,15 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid table or missing id' }, { status: 400 });
   }
 
+  // Snapshot record before deletion for rollback support
+  const { data: previousRecord } = await supabaseAdmin.from(table as any).select('*').eq('id', id).single();
+
   const { error } = await supabaseAdmin.from(table as any).delete().eq('id', id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Log audit
-  await logAudit('DELETE', table, id);
+  // Log audit (include previous_data so DELETE can be rolled back)
+  await logAudit('DELETE', table, id, { previous_data: previousRecord ?? null });
 
   invalidateCache('portfolio:');
 
