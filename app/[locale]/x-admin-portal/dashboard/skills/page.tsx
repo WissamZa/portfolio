@@ -30,7 +30,7 @@ export default function AdminSkills() {
       setEditing(null);
       fetchItems();
       toast.success(isNew ? 'Skill added' : 'Skill updated');
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to save');
     }
   };
@@ -41,7 +41,7 @@ export default function AdminSkills() {
         await deleteItem(id);
         fetchItems();
         toast.success('Skill deleted');
-      } catch (err) {
+      } catch (_err) {
         toast.error('Failed to delete');
       }
     }

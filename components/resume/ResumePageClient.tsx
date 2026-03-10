@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Download, Eye, FileText, Loader } from 'lucide-react';
+import { Download, Loader } from 'lucide-react';
 import type { Locale } from '@/lib/database.types';
 import { getT } from '@/lib/i18n';
 import { cn } from '@/lib/utils';

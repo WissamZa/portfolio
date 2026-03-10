@@ -30,7 +30,7 @@ export default function AdminExperience() {
       setEditing(null);
       fetchItems();
       toast.success(isNew ? 'Experience added' : 'Experience updated');
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to save');
     }
   };
@@ -41,7 +41,7 @@ export default function AdminExperience() {
         await deleteItem(id);
         fetchItems();
         toast.success('Experience deleted');
-      } catch (err) {
+      } catch (_err) {
         toast.error('Failed to delete');
       }
     }

@@ -29,7 +29,7 @@ export default function AdminCertifications() {
       setEditing(null);
       fetchItems();
       toast.success(isNew ? 'Certification added' : 'Certification updated');
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to save');
     }
   };
@@ -40,7 +40,7 @@ export default function AdminCertifications() {
         await deleteItem(id);
         fetchItems();
         toast.success('Certification deleted');
-      } catch (err) {
+      } catch (_err) {
         toast.error('Failed to delete');
       }
     }

@@ -29,7 +29,7 @@ export default function AdminEducation() {
       setEditing(null);
       fetchItems();
       toast.success(isNew ? 'Education added' : 'Education updated');
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to save');
     }
   };
@@ -40,7 +40,7 @@ export default function AdminEducation() {
         await deleteItem(id);
         fetchItems();
         toast.success('Education deleted');
-      } catch (err) {
+      } catch (_err) {
         toast.error('Failed to delete');
       }
     }

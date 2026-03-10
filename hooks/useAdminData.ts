@@ -34,7 +34,7 @@ export function useAdminData<T>(table: TableName) {
     try {
       const { data } = await adminFetch('GET', table);
       setItems(data || []);
-    } catch (err) {
+    } catch (_err) {
       toast.error(`Failed to load ${table}`);
     } finally {
       setLoading(false);

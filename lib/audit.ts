@@ -5,13 +5,13 @@ export async function logAudit(
   action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN',
   tableName: string,
   recordId: string | null = null,
-  details: any = {}
+  details: Record<string, unknown> = {}
 ) {
   try {
     const user = await stack.getUser();
     if (!user?.primaryEmail) return;
 
-    await (supabaseAdmin as any).from('audit_logs').insert({
+    await supabaseAdmin.from('audit_logs').insert({
       user_email: user.primaryEmail,
       action,
       table_name: tableName,

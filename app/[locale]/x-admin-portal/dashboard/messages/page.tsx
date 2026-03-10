@@ -20,7 +20,7 @@ export default function AdminMessages() {
       try {
         await updateItem(msg.id, { is_read: true });
         fetchItems();
-      } catch (err) {
+      } catch (_err) {
         // Silent fail for auto-mark-read
       }
     }
@@ -32,7 +32,7 @@ export default function AdminMessages() {
         await deleteItem(id);
         fetchItems();
         toast.success('Message deleted');
-      } catch (err) {
+      } catch (_err) {
         toast.error('Failed to delete');
       }
     }

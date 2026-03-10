@@ -37,8 +37,8 @@ export async function POST(req: NextRequest) {
       .getPublicUrl(data.path);
 
     return NextResponse.json({ url: publicUrl });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('API Error (Upload):', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 500 });
   }
 }

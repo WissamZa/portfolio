@@ -2,7 +2,7 @@
 
 import { useUser } from '@stackframe/stack';
 import Link from 'next/link';
-import { Shield, ChevronRight } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
 export default function AdminQuickAccess({ locale }: { locale: string }) {
     const user = useUser();

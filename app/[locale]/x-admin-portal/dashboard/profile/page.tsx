@@ -27,7 +27,7 @@ export default function AdminProfile() {
       else await createItem(form);
       toast.success('Profile updated successfully');
       fetchItems();
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to update profile');
     } finally {
       setSaving(false);
@@ -77,7 +77,7 @@ export default function AdminProfile() {
                     type={f.type}
                     className={`input-neon text-sm ${f.rtl ? 'text-right font-arabic' : 'font-mono'}`}
                     dir={f.rtl ? 'rtl' : 'ltr'}
-                    value={(form as Record<string, any>)[f.key] || ''}
+                    value={(form as Record<string, unknown>)[f.key] as string || ''}
                     onChange={e => setForm({ ...form, [f.key]: e.target.value })}
                   />
                 </div>

@@ -10,7 +10,7 @@ interface AuditLog {
     action: string;
     table_name: string;
     record_id: string;
-    details: any;
+    details: Record<string, unknown>;
     created_at: string;
 }
 

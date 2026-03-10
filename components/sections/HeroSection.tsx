@@ -1,70 +1,39 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ChevronDown, Github, Linkedin, Twitter, Terminal } from 'lucide-react';
-import type { Profile } from '@/lib/database.types';
-import type { Locale } from '@/lib/database.types';
+import type { Profile, Locale } from '@/lib/database.types';
 import { getT } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
+import { useTypewriter } from '@/hooks/useTypewriter';
+import { HERO_STATS, getLocalizedStats, DEFAULT_TITLES } from '@/lib/constants/hero';
 
 interface HeroProps {
   profile: Profile | null;
   locale: Locale;
 }
 
-function useTypewriter(texts: string[], speed = 80) {
-  const [displayText, setDisplayText] = useState('');
-  const [textIndex, setTextIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    const current = texts[textIndex];
-    const timeout = setTimeout(
-      () => {
-        if (!isDeleting) {
-          setDisplayText(current.slice(0, charIndex + 1));
-          if (charIndex + 1 === current.length) {
-            setTimeout(() => setIsDeleting(true), 2000);
-          } else {
-            setCharIndex((c) => c + 1);
-          }
-        } else {
-          setDisplayText(current.slice(0, charIndex - 1));
-          if (charIndex - 1 === 0) {
-            setIsDeleting(false);
-            setTextIndex((i) => (i + 1) % texts.length);
-            setCharIndex(0);
-          } else {
-            setCharIndex((c) => c - 1);
-          }
-        }
-      },
-      isDeleting ? speed / 2 : speed
-    );
-    return () => clearTimeout(timeout);
-  }, [texts, textIndex, charIndex, isDeleting, speed]);
-
-  return displayText;
-}
-
+/**
+ * Hero section component displaying the main introduction.
+ * Features a typewriter effect for titles and animated stats.
+ */
 export default function HeroSection({ profile, locale }: HeroProps) {
   const t = getT(locale);
   const isAr = locale === 'ar';
+
+  // Get localized name
   const name = isAr ? profile?.name_ar : profile?.name_en;
+
+  // Get titles for typewriter effect
   const titles = isAr
-    ? [profile?.title_ar || 'مهندس برمجيات', 'مطور متكامل', 'معمار الأنظمة']
-    : [profile?.title_en || 'Software Engineer', 'Full-Stack Developer', 'Systems Architect'];
+    ? [profile?.title_ar || DEFAULT_TITLES.ar[0], ...DEFAULT_TITLES.ar.slice(1)]
+    : [profile?.title_en || DEFAULT_TITLES.en[0], ...DEFAULT_TITLES.en.slice(1)];
 
-  const typeText = useTypewriter(titles.filter(Boolean) as string[]);
+  const { text: typeText } = useTypewriter(titles.filter(Boolean) as string[]);
 
-  const stats = [
-    { label: isAr ? 'مشروع' : 'Projects', value: '20+' },
-    { label: isAr ? 'سنوات خبرة' : 'Years Exp', value: '5+' },
-    { label: isAr ? 'تقنية' : 'Technologies', value: '30+' },
-  ];
+  // Get localized stats
+  const stats = getLocalizedStats(HERO_STATS, locale);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -149,10 +118,10 @@ export default function HeroSection({ profile, locale }: HeroProps) {
             transition={{ delay: 0.7, duration: 0.6 }}
             className={cn('flex gap-8 mb-10', isAr && 'flex-row-reverse')}
           >
-            {stats.map((s) => (
-              <div key={s.label} className={cn('flex flex-col', isAr ? 'items-end' : 'items-start')}>
-                <span className="text-2xl font-bold font-mono neon-text">{s.value}</span>
-                <span className="text-xs text-text-muted font-mono uppercase tracking-wider">{s.label}</span>
+            {stats.map((stat) => (
+              <div key={stat.label} className={cn('flex flex-col', isAr ? 'items-end' : 'items-start')}>
+                <span className="text-2xl font-bold font-mono neon-text">{stat.value}</span>
+                <span className="text-xs text-text-muted font-mono uppercase tracking-wider">{stat.label}</span>
               </div>
             ))}
           </motion.div>
@@ -183,22 +152,13 @@ export default function HeroSection({ profile, locale }: HeroProps) {
             className={cn('flex gap-4', isAr && 'flex-row-reverse')}
           >
             {profile?.github_url && (
-              <a href={profile.github_url} target="_blank" rel="noopener noreferrer"
-                className="w-10 h-10 border border-glass-border flex items-center justify-center text-text-muted hover:text-neon-cyan hover:border-neon-cyan/50 transition-all">
-                <Github size={18} />
-              </a>
+              <SocialLink href={profile.github_url} icon={<Github size={18} />} />
             )}
             {profile?.linkedin_url && (
-              <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer"
-                className="w-10 h-10 border border-glass-border flex items-center justify-center text-text-muted hover:text-neon-cyan hover:border-neon-cyan/50 transition-all">
-                <Linkedin size={18} />
-              </a>
+              <SocialLink href={profile.linkedin_url} icon={<Linkedin size={18} />} />
             )}
             {profile?.twitter_url && (
-              <a href={profile.twitter_url} target="_blank" rel="noopener noreferrer"
-                className="w-10 h-10 border border-glass-border flex items-center justify-center text-text-muted hover:text-neon-cyan hover:border-neon-cyan/50 transition-all">
-                <Twitter size={18} />
-              </a>
+              <SocialLink href={profile.twitter_url} icon={<Twitter size={18} />} />
             )}
           </motion.div>
         </div>
@@ -217,13 +177,38 @@ export default function HeroSection({ profile, locale }: HeroProps) {
       </motion.a>
 
       {/* Corner decorations */}
-      <div className="absolute top-20 right-8 hidden lg:block">
-        <div className="font-mono text-xs text-text-muted/30 text-right space-y-1">
-          <div>// system initialized</div>
-          <div className="text-neon-green/30">status: online</div>
-          <div suppressHydrationWarning>v2.0.{new Date().getFullYear()}</div>
-        </div>
-      </div>
+      <CornerDecoration />
     </section>
+  );
+}
+
+/**
+ * Social media link button with hover effects
+ */
+function SocialLink({ href, icon }: { href: string; icon: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="w-10 h-10 border border-glass-border flex items-center justify-center text-text-muted hover:text-neon-cyan hover:border-neon-cyan/50 transition-all"
+    >
+      {icon}
+    </a>
+  );
+}
+
+/**
+ * Corner decoration showing system status
+ */
+function CornerDecoration() {
+  return (
+    <div className="absolute top-20 right-8 hidden lg:block">
+      <div className="font-mono text-xs text-text-muted/30 text-right space-y-1">
+        <div>{"// system initialized"}</div>
+        <div className="text-neon-green/30">status: online</div>
+        <div suppressHydrationWarning>v2.0.{new Date().getFullYear()}</div>
+      </div>
+    </div>
   );
 }

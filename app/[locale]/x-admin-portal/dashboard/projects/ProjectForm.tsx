@@ -36,8 +36,8 @@ export function ProjectForm({ editing, setEditing }: ProjectFormProps) {
             } else {
                 throw new Error(data.error || 'Upload failed');
             }
-        } catch (err: any) {
-            toast.error('Upload failed: ' + err.message);
+        } catch (err: unknown) {
+            toast.error('Upload failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
         } finally {
             setUploading(false);
         }

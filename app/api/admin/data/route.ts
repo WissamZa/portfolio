@@ -6,6 +6,8 @@ import { invalidateCache } from '@/lib/cache';
 
 type TableName = 'profiles' | 'projects' | 'skills' | 'experience' | 'education' | 'certifications' | 'contact_messages' | 'audit_logs';
 
+type DatabaseRecord = Record<string, unknown> & { id: string };
+
 const VALID_TABLES: TableName[] = [
   'profiles', 'projects', 'skills', 'experience', 'education', 'certifications', 'contact_messages', 'audit_logs'
 ];
@@ -34,9 +36,9 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ data });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('API Error (GET):', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 500 });
   }
 }
 
@@ -53,12 +55,13 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { data, error } = await supabaseAdmin.from(table as any).insert(body as never).select().single();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabaseAdmin as any).from(table).insert(body).select().single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  
+
   // Log audit
-  const recordId = (data as any)?.id;
+  const recordId = (data as DatabaseRecord | null)?.id;
   await logAudit('CREATE', table, recordId, body);
 
   invalidateCache(`portfolio:${table}`);
@@ -84,7 +87,8 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json();
   const updateData = { ...body, updated_at: new Date().toISOString() };
 
-  const { data, error } = await supabaseAdmin.from(table as any).update(updateData as never).eq('id', id).select().single();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabaseAdmin as any).from(table).update(updateData).eq('id', id).select().single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
@@ -109,7 +113,8 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid table or missing id' }, { status: 400 });
   }
 
-  const { error } = await supabaseAdmin.from(table as any).delete().eq('id', id);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabaseAdmin as any).from(table).delete().eq('id', id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

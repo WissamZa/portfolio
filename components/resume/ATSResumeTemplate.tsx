@@ -1,7 +1,7 @@
 import type { Locale } from '@/lib/database.types';
 import type { PortfolioData } from '@/hooks/usePortfolioData';
 import { getT } from '@/lib/i18n';
-import { cn, formatDate } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 
 interface ATSResumeProps {
   data: PortfolioData;

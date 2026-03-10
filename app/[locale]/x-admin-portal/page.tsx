@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Terminal, Lock, AlertCircle, LogIn } from 'lucide-react';
+import { Terminal } from 'lucide-react';
 import { SignIn, useUser } from '@stackframe/stack';
 
 // The admin page is hidden - users must type the secret sequence
@@ -30,9 +30,6 @@ export default function AdminLoginPage() {
     '> Challenge-response required',
     '',
   ]);
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const terminalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();

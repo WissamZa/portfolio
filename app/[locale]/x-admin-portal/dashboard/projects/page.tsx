@@ -31,7 +31,7 @@ export default function AdminProjects() {
       setEditing(null);
       fetchItems();
       toast.success(isNew ? 'Project created' : 'Project updated');
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to save');
     }
   };
@@ -42,7 +42,7 @@ export default function AdminProjects() {
         await deleteItem(id);
         fetchItems();
         toast.success('Project deleted');
-      } catch (err) {
+      } catch (_err) {
         toast.error('Failed to delete');
       }
     }

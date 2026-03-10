@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid data', details: parsed.error.issues }, { status: 400 });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await supabaseAdmin.from('contact_messages').insert(parsed.data as any);
 
     if (error) throw error;

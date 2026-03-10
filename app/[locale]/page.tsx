@@ -1,8 +1,7 @@
-import { Suspense } from 'react';
 import HeroCanvas from '@/components/3d/HeroCanvas';
-import type { Locale } from '@/lib/database.types';
+import type { Locale, Profile, Project, Skill, Experience, Education, Certification } from '@/lib/database.types';
 import { supabaseAdmin } from '@/lib/supabase';
-import { getCached, setCached, CACHE_KEYS } from '@/lib/cache';
+import { getCached, CACHE_KEYS } from '@/lib/cache';
 import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
 import HeroSection from '@/components/sections/HeroSection';
@@ -14,16 +13,34 @@ import ContactSection from '@/components/sections/ContactSection';
 import AboutSection from '@/components/sections/AboutSection';
 import AdminQuickAccess from '@/components/ui/AdminQuickAccess';
 
-
+/** Revalidate page every 5 minutes */
 export const revalidate = 300;
 
-async function getPortfolioData() {
-  const cached = getCached<ReturnType<typeof fetchAll>>(CACHE_KEYS.PROFILE + ':all');
+/** Portfolio data fetched from the database */
+interface PortfolioData {
+  profile: Profile | null;
+  projects: Project[];
+  skills: Skill[];
+  experience: Experience[];
+  education: Education[];
+  certifications: Certification[];
+}
+
+/**
+ * Fetches all portfolio data from the database with caching support.
+ * Returns cached data if available, otherwise fetches fresh data.
+ */
+async function getPortfolioData(): Promise<PortfolioData> {
+  const cached = getCached<PortfolioData>(CACHE_KEYS.PROFILE + ':all');
   if (cached) return cached;
   return fetchAll();
 }
 
-async function fetchAll() {
+/**
+ * Fetches all portfolio data from Supabase in parallel.
+ * Handles null cases and returns empty arrays for collections.
+ */
+async function fetchAll(): Promise<PortfolioData> {
   const [
     { data: profile },
     { data: projects },
@@ -41,12 +58,12 @@ async function fetchAll() {
   ]);
 
   return {
-    profile: profile || null,
-    projects: projects || [],
-    skills: skills || [],
-    experience: experience || [],
-    education: education || [],
-    certifications: certifications || [],
+    profile: profile ?? null,
+    projects: projects ?? [],
+    skills: skills ?? [],
+    experience: experience ?? [],
+    education: education ?? [],
+    certifications: certifications ?? [],
   };
 }
 
@@ -54,6 +71,10 @@ interface PageProps {
   params: Promise<{ locale: string }>;
 }
 
+/**
+ * Portfolio page component that displays all sections.
+ * Supports both English ('en') and Arabic ('ar') locales.
+ */
 export default async function PortfolioPage({ params }: PageProps) {
   const locale = (await params).locale as Locale;
   const data = await getPortfolioData();

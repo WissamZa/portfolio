@@ -1,8 +1,4 @@
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
-
-const ADMIN_TOKEN_COOKIE = 'admin_session';
-const ADMIN_SECRET = process.env.ADMIN_SECRET_TOKEN || 'changeme_in_production';
 
 import { stack } from './stack';
 import { supabaseAdmin } from './supabase';
@@ -18,7 +14,7 @@ export async function isAdminAuthenticated(): Promise<boolean> {
       .from('profiles')
       .select('email')
       .limit(1)
-      .single() as any;
+      .single();
     
     return !!(user.primaryEmail && profile?.email && user.primaryEmail === profile.email);
   } catch (err) {
@@ -27,7 +23,7 @@ export async function isAdminAuthenticated(): Promise<boolean> {
   }
 }
 
-export async function requireAdmin(req: NextRequest): Promise<NextResponse | null> {
+export async function requireAdmin(_req: NextRequest): Promise<NextResponse | null> {
   if (await isAdminAuthenticated()) {
     return null;
   }
