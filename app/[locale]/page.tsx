@@ -1,8 +1,7 @@
-import { Suspense } from 'react';
 import HeroCanvas from '@/components/3d/HeroCanvas';
 import type { Locale } from '@/lib/database.types';
 import { supabaseAdmin } from '@/lib/supabase';
-import { getCached, setCached, CACHE_KEYS } from '@/lib/cache';
+import { getCached, CACHE_KEYS } from '@/lib/cache';
 import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
 import HeroSection from '@/components/sections/HeroSection';

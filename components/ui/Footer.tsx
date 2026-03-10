@@ -25,6 +25,9 @@ export default function Footer({ locale }: FooterProps) {
             <Link href={`/${locale}`} className="text-text-muted hover:text-neon-cyan transition-colors">
               {t.nav.home}
             </Link>
+            <Link href={`/${locale}/x-admin-portal`} className="text-text-muted hover:text-neon-cyan transition-colors">
+              {t.nav.console}
+            </Link>
             <Link href={`/${locale}/resume`} className="text-text-muted hover:text-neon-cyan transition-colors">
               {t.nav.resume}
             </Link>

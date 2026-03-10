@@ -10,6 +10,7 @@ export const translations = {
       experience: 'Experience',
       education: 'Education',
       contact: 'Contact',
+      console: 'Console',
       resume: 'Resume',
     },
     hero: {
@@ -110,6 +111,7 @@ export const translations = {
       experience: 'الخبرات',
       education: 'التعليم',
       contact: 'تواصل',
+      console: 'غرفة العمليات',
       resume: 'السيرة الذاتية',
     },
     hero: {
