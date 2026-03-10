@@ -6,7 +6,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import type { Locale } from '@/lib/database.types';
 import { getT, isRTL } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
-import { Menu, X, Globe, FileText } from 'lucide-react';
+import { Menu, X, Globe, FileText, Shield } from 'lucide-react';
+import { useUser } from '@stackframe/stack';
 
 interface NavbarProps {
   locale: Locale;
@@ -18,6 +19,7 @@ export default function Navbar({ locale }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const user = useUser();
   const rtl = isRTL(locale);
 
   useEffect(() => {
@@ -85,6 +87,17 @@ export default function Navbar({ locale }: NavbarProps) {
               <Globe size={14} />
               <span>{locale === 'en' ? 'عربي' : 'EN'}</span>
             </button>
+
+            {/* Admin icon if logged in */}
+            {user && (
+              <Link
+                href={`/${locale}/x-admin-portal/dashboard`}
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan hover:bg-neon-cyan hover:text-void transition-all duration-300 shadow-[0_0_10px_rgba(0,245,255,0.2)]"
+                title="Admin Dashboard"
+              >
+                <Shield size={16} />
+              </Link>
+            )}
 
             {/* Resume link */}
             <Link

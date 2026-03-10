@@ -4,9 +4,10 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, FolderCode, Cpu, Briefcase, GraduationCap,
-  MessageSquare, LogOut, Award, User
+  MessageSquare, LogOut, Award, User, Settings, ShieldCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUser } from '@stackframe/stack';
 
 export default function AdminNav({ active }: { active: string }) {
   const router = useRouter();
@@ -22,11 +23,13 @@ export default function AdminNav({ active }: { active: string }) {
     { href: `/${locale}/x-admin-portal/dashboard/education`, icon: GraduationCap, label: 'Education', key: 'education' },
     { href: `/${locale}/x-admin-portal/dashboard/certifications`, icon: Award, label: 'Certifications', key: 'certifications' },
     { href: `/${locale}/x-admin-portal/dashboard/messages`, icon: MessageSquare, label: 'Messages', key: 'messages' },
+    { href: `/${locale}/x-admin-portal/dashboard/audit-logs`, icon: ShieldCheck, label: 'Audit Logs', key: 'audit-logs' },
+    { href: `/${locale}/x-admin-portal/dashboard/settings`, icon: Settings, label: 'Settings', key: 'settings' },
   ];
 
+  const user = useUser();
   const handleLogout = async () => {
-    await fetch('/api/admin/auth', { method: 'DELETE', credentials: 'include' });
-    router.push(`/${locale}/x-admin-portal`);
+    await user?.signOut();
   };
 
   return (

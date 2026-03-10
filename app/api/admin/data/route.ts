@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { requireAdmin } from '@/lib/auth';
+import { logAudit } from '@/lib/audit';
 import { invalidateCache } from '@/lib/cache';
 
-type TableName = 'profiles' | 'projects' | 'skills' | 'experience' | 'education' | 'certifications' | 'contact_messages';
+type TableName = 'profiles' | 'projects' | 'skills' | 'experience' | 'education' | 'certifications' | 'contact_messages' | 'audit_logs';
 
 const VALID_TABLES: TableName[] = [
-  'profiles', 'projects', 'skills', 'experience', 'education', 'certifications', 'contact_messages'
+  'profiles', 'projects', 'skills', 'experience', 'education', 'certifications', 'contact_messages', 'audit_logs'
 ];
 
 function validateTable(table: string): table is TableName {
@@ -15,26 +16,33 @@ function validateTable(table: string): table is TableName {
 
 // GET /api/admin/data?table=projects
 export async function GET(req: NextRequest) {
-  const authError = requireAdmin(req);
-  if (authError) return authError;
+  try {
+    const authError = await requireAdmin(req);
+    if (authError) return authError;
 
-  const { searchParams } = new URL(req.url);
-  const table = searchParams.get('table');
+    const { searchParams } = new URL(req.url);
+    const table = searchParams.get('table');
 
-  if (!table || !validateTable(table)) {
-    return NextResponse.json({ error: 'Invalid table' }, { status: 400 });
+    if (!table || !validateTable(table)) {
+      return NextResponse.json({ error: 'Invalid table' }, { status: 400 });
+    }
+
+    const { data, error } = await supabaseAdmin.from(table).select('*').order('created_at', { ascending: false });
+    if (error) {
+      console.error(`Supabase error fetching ${table}:`, error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ data });
+  } catch (err: any) {
+    console.error('API Error (GET):', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
-
-  const { data, error } = await supabaseAdmin.from(table).select('*').order('created_at', { ascending: false });
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json({ data });
 }
 
 // POST /api/admin/data?table=projects
 export async function POST(req: NextRequest) {
-  const authError = requireAdmin(req);
+  const authError = await requireAdmin(req);
   if (authError) return authError;
 
   const { searchParams } = new URL(req.url);
@@ -48,6 +56,10 @@ export async function POST(req: NextRequest) {
   const { data, error } = await supabaseAdmin.from(table as any).insert(body as never).select().single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  
+  // Log audit
+  const recordId = (data as any)?.id;
+  await logAudit('CREATE', table, recordId, body);
 
   invalidateCache(`portfolio:${table}`);
   invalidateCache('portfolio:profile');
@@ -58,7 +70,7 @@ export async function POST(req: NextRequest) {
 
 // PATCH /api/admin/data?table=projects&id=uuid
 export async function PATCH(req: NextRequest) {
-  const authError = requireAdmin(req);
+  const authError = await requireAdmin(req);
   if (authError) return authError;
 
   const { searchParams } = new URL(req.url);
@@ -76,6 +88,9 @@ export async function PATCH(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  // Log audit
+  await logAudit('UPDATE', table, id, body);
+
   invalidateCache('portfolio:');
 
   return NextResponse.json({ data });
@@ -83,7 +98,7 @@ export async function PATCH(req: NextRequest) {
 
 // DELETE /api/admin/data?table=projects&id=uuid
 export async function DELETE(req: NextRequest) {
-  const authError = requireAdmin(req);
+  const authError = await requireAdmin(req);
   if (authError) return authError;
 
   const { searchParams } = new URL(req.url);
@@ -97,6 +112,9 @@ export async function DELETE(req: NextRequest) {
   const { error } = await supabaseAdmin.from(table as any).delete().eq('id', id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Log audit
+  await logAudit('DELETE', table, id);
 
   invalidateCache('portfolio:');
 

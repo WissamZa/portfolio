@@ -8,6 +8,7 @@ import {
   MessageSquare, LogOut, Menu, X, Award, User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUser } from '@stackframe/stack';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Record<string, number>>({});
@@ -47,9 +48,16 @@ export default function AdminDashboard() {
     loadStats();
   }, [locale]);
 
+  const user = useUser();
+
+  useEffect(() => {
+    if (!user) {
+      router.push(`/${locale}/x-admin-portal`);
+    }
+  }, [user, locale, router]);
+
   const handleLogout = async () => {
-    await fetch('/api/admin/auth', { method: 'DELETE', credentials: 'include' });
-    router.push(`/${locale}/x-admin-portal`);
+    await user?.signOut();
   };
 
   return (

@@ -12,6 +12,7 @@ import ExperienceSection from '@/components/sections/ExperienceSection';
 import EducationSection from '@/components/sections/EducationSection';
 import ContactSection from '@/components/sections/ContactSection';
 import AboutSection from '@/components/sections/AboutSection';
+import AdminQuickAccess from '@/components/ui/AdminQuickAccess';
 
 
 export const revalidate = 300;
@@ -71,6 +72,7 @@ export default async function PortfolioPage({ params }: PageProps) {
         <ContactSection profile={data.profile} locale={locale} />
       </main>
       <Footer locale={locale} />
+      <AdminQuickAccess locale={locale} />
     </>
   );
 }
