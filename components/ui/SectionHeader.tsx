@@ -20,7 +20,7 @@ export default function SectionHeader({ tag, title, subtitle, isAr }: SectionHea
       <span className="section-tag">{tag}</span>
       <h2 className={cn(
         'text-4xl sm:text-5xl font-bold mt-2 text-text-primary',
-        isAr ? 'font-arabic' : 'font-display'
+        isAr ? 'font-arabic mb-7' : 'font-display'
       )}>
         {title}
         <span className="text-neon-cyan">.</span>

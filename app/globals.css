@@ -34,6 +34,15 @@
   [dir="rtl"] {
     font-family: 'Cairo', 'Space Grotesk', sans-serif;
   }
+
+  /* Code/pre elements always stay LTR even in Arabic pages */
+  [dir="rtl"] code,
+  [dir="rtl"] pre,
+  [dir="rtl"] kbd {
+    direction: ltr;
+    text-align: left;
+    unicode-bidi: isolate;
+  }
 }
 
 @layer components {

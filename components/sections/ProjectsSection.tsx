@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Github, ExternalLink, Star } from 'lucide-react';
+import { ExternalLink, Star } from 'lucide-react';
+import { Github } from '../ui/BrandIcons';
 import type { Project, Locale } from '@/lib/database.types';
 import { getT } from '@/lib/i18n';
 import { cn, getTechColor } from '@/lib/utils';

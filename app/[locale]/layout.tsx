@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import type { Locale } from '@/lib/database.types';
+import DirectionProvider from '@/components/ui/DirectionProvider';
 
 interface Props {
   children: React.ReactNode;
@@ -24,9 +25,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function LocaleLayout({ children, params }: Props) {
   const locale = (await params).locale as Locale;
   const isRTL = locale === 'ar';
+  const dir = isRTL ? 'rtl' : 'ltr';
   return (
-    <div lang={locale} dir={isRTL ? 'rtl' : 'ltr'}>
-      {children}
-    </div>
+    <>
+      <DirectionProvider locale={locale} dir={dir} />
+      <div dir={dir} lang={locale} className="contents">
+        {children}
+      </div>
+    </>
   );
 }

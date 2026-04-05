@@ -67,9 +67,14 @@ export async function POST(req: NextRequest) {
           { status: 422 }
         );
       }
+      const tablesWithUpdatedAt = ['profiles', 'projects', 'experience'];
+      const updatePayload = tablesWithUpdatedAt.includes(table_name)
+        ? { ...prevData, updated_at: new Date().toISOString() }
+        : prevData;
+
       const { data, error } = await (supabaseAdmin as any)
         .from(table_name)
-        .update({ ...prevData, updated_at: new Date().toISOString() })
+        .update(updatePayload)
         .eq('id', record_id)
         .select()
         .single();

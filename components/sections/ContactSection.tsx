@@ -63,32 +63,32 @@ export default function ContactSection({ profile, locale }: ContactProps) {
 
             {profile?.email && (
               <a href={`mailto:${profile.email}`}
-                className={cn('flex items-center gap-3 text-text-muted hover:text-neon-cyan transition-colors group', isAr && 'flex-row-reverse')}>
+                className="flex items-center justify-between w-full sm:w-80 gap-3 text-text-muted hover:text-neon-cyan transition-colors group">
+                <span className="font-mono text-sm">{profile.email}</span>
                 <div className="w-10 h-10 border border-glass-border flex items-center justify-center group-hover:border-neon-cyan/50 transition-colors shrink-0">
                   <Mail size={16} />
                 </div>
-                <span className="font-mono text-sm">{profile.email}</span>
               </a>
             )}
 
             {profile?.phone && (
               <a href={`tel:${profile.phone}`}
-                className={cn('flex items-center gap-3 text-text-muted hover:text-neon-cyan transition-colors group', isAr && 'flex-row-reverse')}>
+                className="flex items-center justify-between w-full sm:w-80 gap-3 text-text-muted hover:text-neon-cyan transition-colors group">
+                <span className="font-mono text-sm">{profile.phone}</span>
                 <div className="w-10 h-10 border border-glass-border flex items-center justify-center group-hover:border-neon-cyan/50 transition-colors shrink-0">
                   <Phone size={16} />
                 </div>
-                <span className="font-mono text-sm">{profile.phone}</span>
               </a>
             )}
 
             {(profile?.location_en || profile?.location_ar) && (
-              <div className={cn('flex items-center gap-3 text-text-muted', isAr && 'flex-row-reverse')}>
-                <div className="w-10 h-10 border border-glass-border flex items-center justify-center shrink-0">
-                  <MapPin size={16} />
-                </div>
+              <div className="flex items-center justify-between w-full sm:w-80 gap-3 text-text-muted">
                 <span className={cn('font-mono text-sm', isAr && 'font-arabic')}>
                   {isAr ? profile.location_ar : profile.location_en}
                 </span>
+                <div className="w-10 h-10 border border-glass-border flex items-center justify-center shrink-0">
+                  <MapPin size={16} />
+                </div>
               </div>
             )}
 

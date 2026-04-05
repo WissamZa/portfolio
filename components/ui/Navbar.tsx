@@ -60,7 +60,7 @@ export default function Navbar({ locale }: NavbarProps) {
               <div className="absolute inset-0 bg-neon-cyan/5 group-hover:bg-neon-cyan/10 transition-colors" />
             </div>
             <span className="font-mono text-sm text-text-accent group-hover:text-neon-cyan transition-colors">
-              {locale === 'ar' ? 'ملف.أعمال' : 'portfolio.cs'}
+              {locale === 'ar' ? 'ملف.أعمال' : 'portfolio'}
             </span>
           </Link>
 

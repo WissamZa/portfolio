@@ -52,7 +52,7 @@ export default function AboutSection({ profile, locale }: AboutProps) {
             </p>
 
             {/* Tech philosophy */}
-            <div className="mt-8 font-mono text-xs space-y-2 text-text-muted/60">
+            <div dir="ltr" className="mt-8 font-mono text-xs space-y-2 text-text-muted/60 text-left">
               <div><span className="text-neon-purple">const</span> <span className="text-neon-cyan">philosophy</span> = {'{'}</div>
               <div className="pl-4"><span className="text-text-accent">clean_architecture</span>: <span className="text-neon-green">true</span>,</div>
               <div className="pl-4"><span className="text-text-accent">test_driven</span>: <span className="text-neon-green">true</span>,</div>
@@ -78,9 +78,8 @@ export default function AboutSection({ profile, locale }: AboutProps) {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 + 0.3 }}
                 className={cn(
-                  'glass-card p-6 flex flex-col items-center text-center gap-3',
-                  'hover:border-neon-cyan/30 transition-all group cursor-default',
-                  i % 2 === 1 && 'mt-8'
+                  'glass-card p-4 flex flex-col items-center justify-center text-center gap-3 aspect-square',
+                  'hover:border-neon-cyan/30 transition-all group cursor-default'
                 )}
               >
                 <div className={cn(
@@ -94,7 +93,7 @@ export default function AboutSection({ profile, locale }: AboutProps) {
                 </div>
                 <span className={cn(
                   'text-sm text-text-muted font-mono',
-                  isAr && 'font-arabic'
+                  isAr && 'font-arabic mb-1'
                 )}>
                   {item.label}
                 </span>

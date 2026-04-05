@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ChevronDown, Github, Linkedin, Twitter, Terminal } from 'lucide-react';
+import { ChevronDown, Terminal } from 'lucide-react';
+import { Github, Linkedin, Twitter } from '../ui/BrandIcons';
 import type { Profile } from '@/lib/database.types';
 import type { Locale } from '@/lib/database.types';
 import { getT } from '@/lib/i18n';
@@ -75,8 +76,8 @@ export default function HeroSection({ profile, locale }: HeroProps) {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-neon-cyan/5 blur-[100px] pointer-events-none" />
       <div className="absolute top-1/3 left-1/3 w-[300px] h-[300px] rounded-full bg-neon-purple/5 blur-[80px] pointer-events-none" />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className={cn('flex flex-col', isAr ? 'items-end text-right' : 'items-start text-left')}>
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full" dir={isAr ? 'rtl' : 'ltr'}>
+        <div className="flex flex-col items-start text-start">
           {/* Status badge */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -121,7 +122,7 @@ export default function HeroSection({ profile, locale }: HeroProps) {
             className="flex items-center gap-2 mb-6 h-10"
           >
             <Terminal size={18} className="text-neon-cyan shrink-0" />
-            <span className={cn('text-xl sm:text-2xl font-mono text-neon-cyan')}>
+            <span className="text-xl sm:text-2xl font-mono text-neon-cyan text-start">
               {typeText}
               <span className="animate-terminal-cursor">|</span>
             </span>
@@ -147,10 +148,10 @@ export default function HeroSection({ profile, locale }: HeroProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.6 }}
-            className={cn('flex gap-8 mb-10', isAr && 'flex-row-reverse')}
+            className="flex gap-8 mb-10"
           >
             {stats.map((s) => (
-              <div key={s.label} className={cn('flex flex-col', isAr ? 'items-end' : 'items-start')}>
+              <div key={s.label} className="flex flex-col items-start">
                 <span className="text-2xl font-bold font-mono neon-text">{s.value}</span>
                 <span className="text-xs text-text-muted font-mono uppercase tracking-wider">{s.label}</span>
               </div>
@@ -162,7 +163,7 @@ export default function HeroSection({ profile, locale }: HeroProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.6 }}
-            className={cn('flex flex-wrap gap-4 mb-12', isAr && 'flex-row-reverse')}
+            className="flex flex-wrap gap-4 mb-12"
           >
             <a href="#projects" className="btn-neon-filled px-6 py-3 font-mono text-sm flex items-center gap-2">
               <span className="text-neon-cyan">&gt;</span> {t.hero.viewWork}
@@ -180,7 +181,7 @@ export default function HeroSection({ profile, locale }: HeroProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1, duration: 0.6 }}
-            className={cn('flex gap-4', isAr && 'flex-row-reverse')}
+            className="flex gap-4"
           >
             {profile?.github_url && (
               <a href={profile.github_url} target="_blank" rel="noopener noreferrer"

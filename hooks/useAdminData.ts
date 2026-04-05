@@ -7,13 +7,14 @@ import { invalidatePortfolioCache } from './usePortfolioData';
 type TableName = 'profiles' | 'projects' | 'skills' | 'experience' | 'education' | 'certifications' | 'contact_messages';
 
 async function adminFetch(method: string, table: TableName, body?: unknown, id?: string) {
-  const params = new URLSearchParams({ table });
+  const params = new URLSearchParams({ table, _: Date.now().toString() });
   if (id) params.set('id', id);
 
   const res = await fetch(`/api/admin/data?${params}`, {
     method,
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
+    cache: 'no-store',
     body: body ? JSON.stringify(body) : undefined,
   });
 

@@ -82,7 +82,11 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json();
-  const updateData = { ...body, updated_at: new Date().toISOString() };
+
+  const tablesWithUpdatedAt = ['profiles', 'projects', 'experience'];
+  const updateData = tablesWithUpdatedAt.includes(table)
+    ? { ...body, updated_at: new Date().toISOString() }
+    : body;
 
   // Snapshot previous record for rollback
   const { data: previousRecord } = await supabaseAdmin.from(table as any).select('*').eq('id', id).single();
