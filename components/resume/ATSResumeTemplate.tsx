@@ -24,23 +24,25 @@ export default function ATSResumeTemplate({ data, locale }: ATSResumeProps) {
     <div
       data-resume-template
       dir={isAr ? 'rtl' : 'ltr'}
+      className="p-[8mm] sm:p-[20mm] print:p-0"
       style={{
-        fontFamily: isAr ? '"Cairo", "Arial", sans-serif' : '"Arial", "Helvetica", sans-serif',
+        fontFamily: isAr ? '"Cairo", system-ui, sans-serif' : 'Arial, Helvetica, sans-serif',
         fontSize: '11pt',
         lineHeight: '1.5',
-        color: '#1a1a1a',
+        color: '#000000',
         backgroundColor: '#ffffff',
-        padding: '40px 48px',
-        maxWidth: '794px',
+        maxWidth: '210mm',
+        minHeight: '297mm',
         margin: '0 auto',
+        boxSizing: 'border-box',
       }}
     >
       {/* Header */}
-      <header style={{ borderBottom: '2px solid #1a1a1a', paddingBottom: '16px', marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '24pt', fontWeight: 'bold', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>
+      <header style={{ borderBottom: '2px solid #000000', paddingBottom: '16px', marginBottom: '20px' }}>
+        <h1 style={{ fontSize: '24pt', fontWeight: 'bold', margin: '0 0 4px 0', letterSpacing: isAr ? 'normal' : '-0.5px', color: '#000000' }}>
           {isAr ? profile?.name_ar : profile?.name_en}
         </h1>
-        <p style={{ fontSize: '12pt', color: '#444', margin: '0 0 8px 0', fontWeight: '500' }}>
+        <p style={{ fontSize: '12pt', color: '#333333', margin: '0 0 8px 0', fontWeight: 'bold' }}>
           {isAr ? profile?.title_ar : profile?.title_en}
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '9pt', color: '#555' }}>
@@ -56,7 +58,7 @@ export default function ATSResumeTemplate({ data, locale }: ATSResumeProps) {
       {/* Summary */}
       {(profile?.bio_en || profile?.bio_ar) && (
         <section style={{ marginBottom: '20px' }}>
-          <SectionTitle title={isAr ? 'الملخص المهني' : 'PROFESSIONAL SUMMARY'} />
+          <SectionTitle title={isAr ? 'الملخص المهني' : 'PROFESSIONAL SUMMARY'} isAr={isAr} />
           <p style={{ fontSize: '10pt', color: '#333', lineHeight: '1.6' }}>
             {isAr ? profile?.bio_ar : profile?.bio_en}
           </p>
@@ -66,7 +68,7 @@ export default function ATSResumeTemplate({ data, locale }: ATSResumeProps) {
       {/* Skills */}
       {skills.length > 0 && (
         <section style={{ marginBottom: '20px' }}>
-          <SectionTitle title={isAr ? 'المهارات التقنية' : 'TECHNICAL SKILLS'} />
+          <SectionTitle title={isAr ? 'المهارات التقنية' : 'TECHNICAL SKILLS'} isAr={isAr} />
           {Object.entries(skillsByCategory).map(([cat, skillNames]) => (
             <div key={cat} style={{ display: 'flex', gap: '12px', marginBottom: '4px', fontSize: '10pt', alignItems: 'baseline' }}>
               <div style={{ 
@@ -88,7 +90,7 @@ export default function ATSResumeTemplate({ data, locale }: ATSResumeProps) {
       {/* Experience */}
       {experience.length > 0 && (
         <section style={{ marginBottom: '20px' }}>
-          <SectionTitle title={isAr ? 'الخبرات المهنية' : 'PROFESSIONAL EXPERIENCE'} />
+          <SectionTitle title={isAr ? 'الخبرات المهنية' : 'PROFESSIONAL EXPERIENCE'} isAr={isAr} />
           {experience.map((exp) => (
             <div key={exp.id} style={{ marginBottom: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -118,7 +120,7 @@ export default function ATSResumeTemplate({ data, locale }: ATSResumeProps) {
       {/* Projects */}
       {projects.length > 0 && (
         <section style={{ marginBottom: '20px' }}>
-          <SectionTitle title={isAr ? 'المشاريع' : 'PROJECTS'} />
+          <SectionTitle title={isAr ? 'المشاريع' : 'PROJECTS'} isAr={isAr} />
           {projects.filter(p => p.featured || projects.length <= 4).slice(0, 5).map((proj) => (
             <div key={proj.id} style={{ marginBottom: '10px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -147,7 +149,7 @@ export default function ATSResumeTemplate({ data, locale }: ATSResumeProps) {
       {/* Education */}
       {education.length > 0 && (
         <section style={{ marginBottom: '20px' }}>
-          <SectionTitle title={isAr ? 'التعليم' : 'EDUCATION'} />
+          <SectionTitle title={isAr ? 'التعليم' : 'EDUCATION'} isAr={isAr} />
           {education.map((edu) => (
             <div key={edu.id} style={{ marginBottom: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -184,7 +186,7 @@ export default function ATSResumeTemplate({ data, locale }: ATSResumeProps) {
       {/* Certifications & Courses */}
       {(certifications.length > 0 || courses.length > 0) && (
         <section>
-          <SectionTitle title={isAr ? 'الشهادات والدورات' : 'CERTIFICATIONS & COURSES'} />
+          <SectionTitle title={isAr ? 'الشهادات والدورات' : 'CERTIFICATIONS & COURSES'} isAr={isAr} />
           {certifications.map((cert) => (
             <div key={cert.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '10pt' }}>
               <span>
@@ -220,16 +222,16 @@ export default function ATSResumeTemplate({ data, locale }: ATSResumeProps) {
   );
 }
 
-function SectionTitle({ title }: { title: string }) {
+function SectionTitle({ title, isAr }: { title: string, isAr?: boolean }) {
   return (
     <h2 style={{
-      fontSize: '10pt',
+      fontSize: '12pt',
       fontWeight: 'bold',
-      letterSpacing: '1px',
-      borderBottom: '1px solid #ccc',
+      letterSpacing: isAr ? 'normal' : '1px',
+      borderBottom: '2px solid #dddddd',
       paddingBottom: '4px',
-      marginBottom: '10px',
-      color: '#1a1a1a',
+      marginBottom: '12px',
+      color: '#000000',
       textTransform: 'uppercase',
     }}>
       {title}

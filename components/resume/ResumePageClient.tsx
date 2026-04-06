@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Download, Eye, FileText, Loader } from 'lucide-react';
 import type { Locale } from '@/lib/database.types';
 import { getT } from '@/lib/i18n';
@@ -22,67 +22,49 @@ export default function ResumePageClient({ locale }: ResumePageClientProps) {
   const [printing, setPrinting] = useState(false);
   const resumeRef = useRef<HTMLDivElement>(null);
 
-  const handleDownload = async () => {
-    setPrinting(true);
-    try {
-      // Dynamic import to avoid SSR issues
-      const { default: jsPDF } = await import('jspdf');
-      const { default: html2canvas } = await import('html2canvas');
-
-      if (!resumeRef.current) return;
-
-      const canvas = await html2canvas(resumeRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        onclone: (clonedDoc) => {
-          // Ensure cloned element is visible and properly sized
-          const resume = clonedDoc.querySelector('[data-resume-template]') as HTMLElement;
-          if (resume) {
-            resume.style.margin = '0';
-            resume.style.padding = '40px';
-          }
+  // We add styling to specifically handle printing layout via JS since we're initiating it
+  useEffect(() => {
+    // Add generic print styles to body just in case
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @media print {
+        @page {
+          margin: 20mm;
+          size: A4 portrait;
         }
-      });
-
-      const imgData = canvas.toDataURL('image/png', 1.0);
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-      
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      // Add first page
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-      heightLeft -= pdfHeight;
-
-      // Add subsequent pages if content overflows A4 height
-      while (heightLeft > 0) {
-        position -= pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pdfHeight;
+        body {
+          margin: 0;
+          background: white !important;
+          color: black !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        main {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
       }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
-      pdf.save(`resume-${resumeLocale}.pdf`);
-    } finally {
-      setPrinting(false);
-    }
+  const handleDownload = () => {
+    window.print();
   };
 
   return (
     <>
-      <Navbar locale={locale} />
-      <main className="relative z-10 min-h-screen pt-20 pb-12">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="print:hidden">
+        <Navbar locale={locale} />
+      </div>
+      <main className="relative z-10 min-h-screen pt-20 pb-12 print:pt-0 print:pb-0 print:min-h-0">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 print:px-0 print:max-w-none print:w-full print:m-0">
           {/* Controls */}
           <div className={cn(
-            'flex flex-wrap items-center justify-between gap-4 mb-8',
+            'flex flex-wrap items-center justify-between gap-4 mb-8 print:hidden',
             isAr && 'flex-row-reverse'
           )}>
             <div>
@@ -126,12 +108,12 @@ export default function ResumePageClient({ locale }: ResumePageClientProps) {
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center h-96">
+            <div className="flex items-center justify-center h-96 print:hidden">
               <div className="spinner" />
             </div>
           ) : (
-            <div className="shadow-2xl border border-glass-border">
-              <div ref={resumeRef}>
+            <div className="shadow-2xl border border-glass-border print:shadow-none print:border-none print:m-0 bg-white">
+              <div ref={resumeRef} className="print:w-full print:m-0 print:p-0">
                 <ATSResumeTemplate
                   data={data!}
                   locale={resumeLocale}
@@ -141,7 +123,10 @@ export default function ResumePageClient({ locale }: ResumePageClientProps) {
           )}
         </div>
       </main>
-      <Footer locale={locale} />
+      <div className="print:hidden">
+        <Footer locale={locale} />
+      </div>
     </>
   );
 }
+
