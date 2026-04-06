@@ -6,10 +6,6 @@ export const metadata: Metadata = {
   title: 'Portfolio | CS Engineer',
   description: 'Full-Stack Software Engineer portfolio - Computer Science specialist',
   keywords: ['software engineer', 'full stack', 'computer science', 'portfolio'],
-  icons: {
-    icon: '/favicon.ico',
-    apple: '/favicon.ico',
-  },
   robots: 'index, follow',
 };
 
@@ -20,7 +16,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>

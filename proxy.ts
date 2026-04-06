@@ -3,10 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (pathname === '/favicon.ico') {
-    return new NextResponse(null, { status: 404 });
-  }
-
   // Protect admin dashboard routes (not the login page itself)
   if (pathname.startsWith('/x-admin-portal/dashboard')) {
     const adminSession = req.cookies.get('admin_session')?.value;
