@@ -19,8 +19,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       locale === 'ar'
         ? 'مهندس برمجيات متكامل - متخصص في علوم الحاسب'
         : 'Full-Stack Software Engineer - Computer Science specialist',
+    icons: {
+      icon: '/favicon.ico',
+    },
   };
 }
+
 
 export default async function LocaleLayout({ children, params }: Props) {
   const locale = (await params).locale as Locale;

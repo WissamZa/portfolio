@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Profile, Project, Skill, Experience, Education, Certification } from '@/lib/database.types';
+import type { Profile, Project, Skill, Experience, Education, Certification, Course } from '@/lib/database.types';
 
 export interface PortfolioData {
   profile: Profile | null;
@@ -10,6 +10,7 @@ export interface PortfolioData {
   experience: Experience[];
   education: Education[];
   certifications: Certification[];
+  courses: Course[];
 }
 
 let portfolioCache: { data: PortfolioData; timestamp: number } | null = null;

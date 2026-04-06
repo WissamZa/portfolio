@@ -6,6 +6,7 @@ export const en = {
     skills: 'Skills',
     experience: 'Experience',
     education: 'Education',
+    courses: 'Courses',
     contact: 'Contact',
     console: 'Console',
     resume: 'Resume',
@@ -55,6 +56,11 @@ export const en = {
     title: 'Education',
     subtitle: 'Academic background',
     gpa: 'GPA',
+  },
+  courses: {
+    title: 'Courses & Bootcamps',
+    subtitle: 'Continuous learning journey',
+    viewCertificate: 'View Certificate',
   },
   contact: {
     title: 'Contact',

@@ -14,7 +14,7 @@ async function fetchWithCache<T>(key: string, fetcher: () => Promise<T>, ttl = 3
 
 export async function GET() {
   try {
-    const [profile, projects, skills, experience, education, certifications] = await Promise.all([
+    const [profile, projects, skills, experience, education, certifications, courses] = await Promise.all([
       fetchWithCache(CACHE_KEYS.PROFILE, async () => {
         const { data } = await supabaseAdmin.from('profiles').select('*').single();
         return data;
@@ -59,10 +59,18 @@ export async function GET() {
           .order('issue_date', { ascending: false });
         return data || [];
       }),
+      fetchWithCache(CACHE_KEYS.COURSES, async () => {
+        const { data } = await supabaseAdmin
+          .from('courses')
+          .select('*')
+          .order('order_index')
+          .order('completion_date', { ascending: false });
+        return data || [];
+      }),
     ]);
 
     return NextResponse.json(
-      { profile, projects, skills, experience, education, certifications },
+      { profile, projects, skills, experience, education, certifications, courses },
       {
         headers: {
           'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',

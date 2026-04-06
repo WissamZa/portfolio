@@ -9,6 +9,7 @@ export interface Database {
       experience: { Row: Experience; Insert: Omit<Experience, 'id' | 'created_at' | 'updated_at'>; Update: Partial<Experience> };
       education: { Row: Education; Insert: Omit<Education, 'id' | 'created_at'>; Update: Partial<Education> };
       certifications: { Row: Certification; Insert: Omit<Certification, 'id' | 'created_at'>; Update: Partial<Certification> };
+      courses: { Row: Course; Insert: Omit<Course, 'id' | 'created_at' | 'updated_at'>; Update: Partial<Course> };
       contact_messages: { Row: ContactMessage; Insert: Omit<ContactMessage, 'id' | 'created_at'>; Update: Partial<ContactMessage> };
     };
   };
@@ -131,6 +132,23 @@ export interface ContactMessage {
   message: string;
   is_read: boolean;
   created_at: string;
+}
+
+export interface Course {
+  id: string;
+  name_en: string;
+  name_ar: string;
+  provider_en: string;
+  provider_ar: string;
+  completion_date: string | null;
+  course_url: string | null;
+  certificate_url: string | null;
+  description_en: string | null;
+  description_ar: string | null;
+  logo_url: string | null;
+  order_index: number;
+  created_at: string;
+  updated_at: string;
 }
 
 // i18n types

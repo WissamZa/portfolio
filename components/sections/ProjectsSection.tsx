@@ -56,25 +56,40 @@ export default function ProjectsSection({ projects, locale }: ProjectsProps) {
                 </div>
               )}
 
-              {/* Project image placeholder / status bar */}
-              <div className="h-2 w-full bg-linear-to-r from-neon-cyan/30 via-neon-purple/30 to-neon-green/30" />
-
-              <div className={cn('p-6', isAr && 'text-right')}>
-                {/* Status */}
-                <div className={cn('flex items-center gap-2 mb-3', isAr && 'justify-end')}>
+              {/* Project Image or Canvas */}
+              <div className="relative h-48 w-full overflow-hidden bg-void-3">
+                {project.image_url ? (
+                  <img
+                    src={project.image_url}
+                    alt={isAr ? project.title_ar : project.title_en}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-linear-to-br from-neon-cyan/10 via-neon-purple/10 to-neon-orange/10 flex items-center justify-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--color-neon-cyan)_0%,transparent_70%)] opacity-5" />
+                    <Star size={32} className="text-neon-cyan/20 animate-pulse-slow" />
+                  </div>
+                )}
+                {/* Status Overlay */}
+                <div className={cn(
+                  'absolute bottom-3 flex items-center gap-2 px-2 py-1 bg-void/80 backdrop-blur-sm border border-white/10 text-[10px] font-mono z-10',
+                  isAr ? 'left-3' : 'right-3'
+                )}>
                   <div className={cn(
-                    'w-1.5 h-1.5 rounded-full',
+                    'w-1.5 h-1.5 rounded-full animate-pulse',
                     project.status === 'completed' ? 'bg-neon-green' :
                     project.status === 'in_progress' ? 'bg-neon-orange' : 'bg-text-muted'
                   )} />
-                  <span className="font-mono text-xs text-text-muted">
+                  <span className="text-text-muted uppercase tracking-widest">
                     {t.projects.status[project.status]}
                   </span>
                 </div>
+              </div>
 
+              <div className={cn('p-6 flex-1 flex flex-col', isAr && 'text-right')}>
                 {/* Title */}
                 <h3 className={cn(
-                  'text-lg font-semibold text-text-primary mb-2 group-hover:text-neon-cyan transition-colors',
+                  'text-xl font-bold text-text-primary mb-3 group-hover:text-neon-cyan transition-colors line-tight',
                   isAr && 'font-arabic'
                 )}>
                   {isAr ? project.title_ar : project.title_en}
@@ -82,39 +97,35 @@ export default function ProjectsSection({ projects, locale }: ProjectsProps) {
 
                 {/* Description */}
                 <p className={cn(
-                  'text-sm text-text-muted leading-relaxed mb-4 line-clamp-3',
+                  'text-sm text-text-muted leading-relaxed mb-6 flex-1',
                   isAr && 'font-arabic'
                 )}>
                   {isAr ? project.description_ar : project.description_en}
                 </p>
 
                 {/* Tech stack */}
-                <div className={cn('flex flex-wrap gap-1.5 mb-5', isAr && 'justify-end')}>
-                  {project.tech_stack?.slice(0, 4).map((tech) => (
+                <div className={cn('flex flex-wrap gap-2 mb-6', isAr && 'justify-end')}>
+                  {project.tech_stack?.map((tech) => (
                     <span
                       key={tech}
-                      className="tech-badge"
-                      style={{ borderColor: `${getTechColor(tech)}40`, color: getTechColor(tech) }}
+                      className="px-2 py-0.5 text-[10px] font-mono border border-white/5 bg-white/5 text-text-muted group-hover:border-neon-cyan/20 group-hover:text-neon-cyan transition-all"
                     >
                       {tech}
                     </span>
                   ))}
-                  {project.tech_stack?.length > 4 && (
-                    <span className="tech-badge text-text-muted">+{project.tech_stack.length - 4}</span>
-                  )}
                 </div>
 
                 {/* Links */}
-                <div className={cn('flex gap-3', isAr && 'flex-row-reverse')}>
+                <div className={cn('flex items-center gap-4 pt-4 border-t border-white/5', isAr && 'flex-row-reverse')}>
                   {project.github_url && (
                     <a
                       href={project.github_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-xs text-text-muted hover:text-neon-cyan transition-colors font-mono"
+                      className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-text-muted hover:text-neon-cyan transition-all"
                     >
                       <Github size={14} />
-                      <span>{t.projects.viewCode}</span>
+                      <span className="hidden sm:inline">{t.projects.viewCode}</span>
                     </a>
                   )}
                   {project.live_url && (
@@ -122,10 +133,10 @@ export default function ProjectsSection({ projects, locale }: ProjectsProps) {
                       href={project.live_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-xs text-text-muted hover:text-neon-green transition-colors font-mono"
+                      className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-neon-green hover:text-white transition-all ml-auto"
                     >
                       <ExternalLink size={14} />
-                      <span>{t.projects.liveDemo}</span>
+                      <span className="hidden sm:inline">{t.projects.liveDemo}</span>
                     </a>
                   )}
                 </div>

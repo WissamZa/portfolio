@@ -6,6 +6,7 @@ export const ar = {
     skills: 'المهارات',
     experience: 'الخبرات',
     education: 'التعليم',
+    courses: 'الكورسات',
     contact: 'تواصل',
     console: 'غرفة العمليات',
     resume: 'السيرة الذاتية',
@@ -55,6 +56,11 @@ export const ar = {
     title: 'التعليم',
     subtitle: 'الخلفية الأكاديمية',
     gpa: 'المعدل التراكمي',
+  },
+  courses: {
+    title: 'الدورات والمعسكرات',
+    subtitle: 'رحلة التعلم المستمر',
+    viewCertificate: 'عرض الشهادة',
   },
   contact: {
     title: 'تواصل',

@@ -100,7 +100,7 @@ export default function AboutSection({ profile, locale }: AboutProps) {
               </motion.div>
             ))}
 
-            {/* Avatar */}
+            {/* Avatar
             {profile?.avatar_url && (
               <div className="col-span-2 flex justify-center mt-4">
                 <div className="relative w-32 h-32">
@@ -110,7 +110,7 @@ export default function AboutSection({ profile, locale }: AboutProps) {
                   <div className="absolute inset-0 clip-hex bg-neon-cyan/10 animate-pulse-slow" />
                 </div>
               </div>
-            )}
+            )} */}
           </motion.div>
         </div>
       </div>

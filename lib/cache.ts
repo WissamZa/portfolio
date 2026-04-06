@@ -39,4 +39,5 @@ export const CACHE_KEYS = {
   EXPERIENCE: 'portfolio:experience',
   EDUCATION: 'portfolio:education',
   CERTIFICATIONS: 'portfolio:certifications',
+  COURSES: 'portfolio:courses',
 } as const;

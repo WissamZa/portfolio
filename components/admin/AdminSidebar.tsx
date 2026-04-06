@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, usePathname } from 'next/navigation';
-import { LogOut, Menu, X } from 'lucide-react';
+import { LogOut, Menu, X, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser } from '@stackframe/stack';
 
@@ -81,6 +81,18 @@ export default function AdminSidebar() {
                     );
                 })}
             </nav>
+
+            {/* View Home */}
+            <Link
+                href={`/${locale}`}
+                className={cn(
+                    'flex items-center gap-3 px-4 py-3 text-text-muted hover:text-neon-cyan transition-colors border-t border-glass-border font-mono text-xs',
+                    !sidebarOpen && 'justify-center px-0'
+                )}
+            >
+                <Globe size={16} className="shrink-0" />
+                {sidebarOpen && <span>View Portfolio</span>}
+            </Link>
 
             {/* Logout */}
             <button

@@ -4,10 +4,10 @@ import { requireAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidateCache } from '@/lib/cache';
 
-type TableName = 'profiles' | 'projects' | 'skills' | 'experience' | 'education' | 'certifications' | 'contact_messages' | 'audit_logs';
+type TableName = 'profiles' | 'projects' | 'skills' | 'experience' | 'education' | 'certifications' | 'courses' | 'contact_messages' | 'audit_logs';
 
 const VALID_TABLES: TableName[] = [
-  'profiles', 'projects', 'skills', 'experience', 'education', 'certifications', 'contact_messages', 'audit_logs'
+  'profiles', 'projects', 'skills', 'experience', 'education', 'certifications', 'courses', 'contact_messages', 'audit_logs'
 ];
 
 function validateTable(table: string): table is TableName {
@@ -83,7 +83,7 @@ export async function PATCH(req: NextRequest) {
 
   const body = await req.json();
 
-  const tablesWithUpdatedAt = ['profiles', 'projects', 'experience'];
+  const tablesWithUpdatedAt = ['profiles', 'projects', 'experience', 'courses'];
   const updateData = tablesWithUpdatedAt.includes(table)
     ? { ...body, updated_at: new Date().toISOString() }
     : body;

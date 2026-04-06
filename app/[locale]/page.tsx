@@ -11,6 +11,7 @@ import ExperienceSection from '@/components/sections/ExperienceSection';
 import EducationSection from '@/components/sections/EducationSection';
 import ContactSection from '@/components/sections/ContactSection';
 import AboutSection from '@/components/sections/AboutSection';
+import CoursesSection from '@/components/sections/CoursesSection';
 import AdminQuickAccess from '@/components/ui/AdminQuickAccess';
 
 
@@ -30,6 +31,7 @@ async function fetchAll() {
     { data: experience },
     { data: education },
     { data: certifications },
+    { data: courses },
   ] = await Promise.all([
     supabaseAdmin.from('profiles').select('*').single(),
     supabaseAdmin.from('projects').select('*').order('order_index').order('created_at', { ascending: false }),
@@ -37,6 +39,7 @@ async function fetchAll() {
     supabaseAdmin.from('experience').select('*').order('order_index').order('start_date', { ascending: false }),
     supabaseAdmin.from('education').select('*').order('order_index').order('start_date', { ascending: false }),
     supabaseAdmin.from('certifications').select('*').order('order_index'),
+    supabaseAdmin.from('courses').select('*').order('order_index').order('completion_date', { ascending: false }),
   ]);
 
   return {
@@ -46,6 +49,7 @@ async function fetchAll() {
     experience: experience || [],
     education: education || [],
     certifications: certifications || [],
+    courses: courses || [],
   };
 }
 
@@ -68,6 +72,7 @@ export default async function PortfolioPage({ params }: PageProps) {
         <SkillsSection skills={data.skills} locale={locale} />
         <ExperienceSection experience={data.experience} locale={locale} />
         <EducationSection education={data.education} locale={locale} />
+        <CoursesSection courses={data.courses} locale={locale} />
         <ContactSection profile={data.profile} locale={locale} />
       </main>
       <Footer locale={locale} />

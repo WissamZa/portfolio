@@ -109,11 +109,15 @@ export default function ContactSection({ profile, locale }: ContactProps) {
           >
             <div className={cn('grid grid-cols-2 gap-4', isAr && '')}>
               <div>
-                <label className={cn('block text-xs font-mono text-text-muted mb-1', isAr && 'text-right')}>
+                <label 
+                  htmlFor="contact-name"
+                  className={cn('block text-xs font-mono text-text-muted mb-1', isAr && 'text-right')}>
                   {t.contact.name}
                 </label>
                 <input
+                  id="contact-name"
                   type="text"
+                  autoComplete="name"
                   className="input-neon rounded-none"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -121,11 +125,15 @@ export default function ContactSection({ profile, locale }: ContactProps) {
                 />
               </div>
               <div>
-                <label className={cn('block text-xs font-mono text-text-muted mb-1', isAr && 'text-right')}>
+                <label 
+                  htmlFor="contact-email"
+                  className={cn('block text-xs font-mono text-text-muted mb-1', isAr && 'text-right')}>
                   {t.contact.email}
                 </label>
                 <input
+                  id="contact-email"
                   type="email"
+                  autoComplete="email"
                   className="input-neon rounded-none"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -135,10 +143,13 @@ export default function ContactSection({ profile, locale }: ContactProps) {
             </div>
 
             <div>
-              <label className={cn('block text-xs font-mono text-text-muted mb-1', isAr && 'text-right')}>
+              <label 
+                htmlFor="contact-subject"
+                className={cn('block text-xs font-mono text-text-muted mb-1', isAr && 'text-right')}>
                 {t.contact.subject}
               </label>
               <input
+                id="contact-subject"
                 type="text"
                 className="input-neon rounded-none"
                 value={form.subject}
@@ -147,10 +158,13 @@ export default function ContactSection({ profile, locale }: ContactProps) {
             </div>
 
             <div>
-              <label className={cn('block text-xs font-mono text-text-muted mb-1', isAr && 'text-right')}>
+              <label 
+                htmlFor="contact-message"
+                className={cn('block text-xs font-mono text-text-muted mb-1', isAr && 'text-right')}>
                 {t.contact.message}
               </label>
               <textarea
+                id="contact-message"
                 rows={5}
                 className="input-neon rounded-none resize-none"
                 value={form.message}

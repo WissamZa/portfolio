@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Cannot rollback audit log entries' }, { status: 400 });
     }
 
-    const validTables = ['profiles', 'projects', 'skills', 'experience', 'education', 'certifications'];
+    const validTables = ['profiles', 'projects', 'skills', 'experience', 'education', 'certifications', 'courses'];
     if (!validTables.includes(table_name)) {
       return NextResponse.json({ error: `Table "${table_name}" does not support rollback` }, { status: 400 });
     }
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
           { status: 422 }
         );
       }
-      const tablesWithUpdatedAt = ['profiles', 'projects', 'experience'];
+      const tablesWithUpdatedAt = ['profiles', 'projects', 'experience', 'courses'];
       const updatePayload = tablesWithUpdatedAt.includes(table_name)
         ? { ...prevData, updated_at: new Date().toISOString() }
         : prevData;

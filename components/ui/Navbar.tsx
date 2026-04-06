@@ -40,6 +40,7 @@ export default function Navbar({ locale }: NavbarProps) {
     { href: `/${locale}#skills`, label: t.nav.skills },
     { href: `/${locale}#experience`, label: t.nav.experience },
     { href: `/${locale}#education`, label: t.nav.education },
+    { href: `/${locale}#courses`, label: t.nav.courses },
     { href: `/${locale}#contact`, label: t.nav.contact },
   ];
 

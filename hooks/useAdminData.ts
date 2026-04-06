@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { invalidatePortfolioCache } from './usePortfolioData';
 
-type TableName = 'profiles' | 'projects' | 'skills' | 'experience' | 'education' | 'certifications' | 'contact_messages';
+type TableName = 'profiles' | 'projects' | 'skills' | 'experience' | 'education' | 'certifications' | 'courses' | 'contact_messages';
 
 async function adminFetch(method: string, table: TableName, body?: unknown, id?: string) {
   const params = new URLSearchParams({ table, _: Date.now().toString() });

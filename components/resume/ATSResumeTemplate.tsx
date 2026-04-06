@@ -10,18 +10,19 @@ interface ATSResumeProps {
 
 // ATS-friendly: white bg, clean layout, no complex CSS, semantic HTML
 export default function ATSResumeTemplate({ data, locale }: ATSResumeProps) {
-  const { profile, projects, skills, experience, education, certifications } = data;
+  const { profile, projects, skills, experience, education, certifications, courses } = data;
   const t = getT(locale);
   const isAr = locale === 'ar';
 
   const skillsByCategory = skills.reduce((acc, s) => {
     if (!acc[s.category]) acc[s.category] = [];
-    acc[s.category].push(isAr ? s.name_ar : s.name_en);
+    acc[s.category].push((isAr ? s.name_ar : s.name_en).trim());
     return acc;
   }, {} as Record<string, string[]>);
 
   return (
     <div
+      data-resume-template
       dir={isAr ? 'rtl' : 'ltr'}
       style={{
         fontFamily: isAr ? '"Cairo", "Arial", sans-serif' : '"Arial", "Helvetica", sans-serif',
@@ -48,8 +49,7 @@ export default function ATSResumeTemplate({ data, locale }: ATSResumeProps) {
           {(isAr ? profile?.location_ar : profile?.location_en) && (
             <span>{isAr ? profile?.location_ar : profile?.location_en}</span>
           )}
-          {profile?.github_url && <span>{profile.github_url}</span>}
-          {profile?.linkedin_url && <span>{profile.linkedin_url}</span>}
+          {profile?.github_url && <span style={{ fontFamily: 'monospace' }}>{profile.github_url.replace(/^https?:\/\//, '')}</span>}
         </div>
       </header>
 
@@ -68,11 +68,18 @@ export default function ATSResumeTemplate({ data, locale }: ATSResumeProps) {
         <section style={{ marginBottom: '20px' }}>
           <SectionTitle title={isAr ? 'المهارات التقنية' : 'TECHNICAL SKILLS'} />
           {Object.entries(skillsByCategory).map(([cat, skillNames]) => (
-            <div key={cat} style={{ display: 'flex', gap: '8px', marginBottom: '4px', fontSize: '10pt' }}>
-              <strong style={{ minWidth: isAr ? '140px' : '130px', color: '#1a1a1a' }}>
+            <div key={cat} style={{ display: 'flex', gap: '12px', marginBottom: '4px', fontSize: '10pt', alignItems: 'baseline' }}>
+              <div style={{ 
+                minWidth: isAr ? '160px' : '150px', 
+                fontWeight: 'bold', 
+                color: '#1a1a1a',
+                textAlign: isAr ? 'right' : 'left'
+              }}>
                 {t.skills.categories[cat as keyof typeof t.skills.categories] || cat}:
-              </strong>
-              <span style={{ color: '#333' }}>{skillNames.join(' • ')}</span>
+              </div>
+              <div style={{ color: '#333', flex: 1 }}>
+                {skillNames.join(', ')}
+              </div>
             </div>
           ))}
         </section>
@@ -109,25 +116,29 @@ export default function ATSResumeTemplate({ data, locale }: ATSResumeProps) {
       )}
 
       {/* Projects */}
-      {projects.filter(p => p.featured).length > 0 && (
+      {projects.length > 0 && (
         <section style={{ marginBottom: '20px' }}>
-          <SectionTitle title={isAr ? 'المشاريع المميزة' : 'KEY PROJECTS'} />
-          {projects.filter(p => p.featured).slice(0, 4).map((proj) => (
+          <SectionTitle title={isAr ? 'المشاريع' : 'PROJECTS'} />
+          {projects.filter(p => p.featured || projects.length <= 4).slice(0, 5).map((proj) => (
             <div key={proj.id} style={{ marginBottom: '10px' }}>
-              <strong style={{ fontSize: '10pt' }}>
-                {isAr ? proj.title_ar : proj.title_en}
-              </strong>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <strong style={{ fontSize: '10pt' }}>
+                  {isAr ? proj.title_ar : proj.title_en}
+                </strong>
+                {proj.github_url && (
+                  <span style={{ fontSize: '8pt', color: '#666', fontFamily: 'monospace' }}>
+                    {proj.github_url.replace(/^https?:\/\//, '')}
+                  </span>
+                )}
+              </div>
               {proj.tech_stack?.length > 0 && (
-                <span style={{ fontSize: '9pt', color: '#666' }}>
-                  {' '}({proj.tech_stack.join(', ')})
-                </span>
+                <div style={{ fontSize: '9pt', color: '#666', fontStyle: 'italic', marginBottom: '2px' }}>
+                  {proj.tech_stack.join(' • ')}
+                </div>
               )}
-              <p style={{ fontSize: '10pt', color: '#333', margin: '2px 0 0 0' }}>
+              <p style={{ fontSize: '10pt', color: '#333', margin: '0' }}>
                 {isAr ? proj.description_ar : proj.description_en}
               </p>
-              {proj.github_url && (
-                <span style={{ fontSize: '9pt', color: '#666' }}>{proj.github_url}</span>
-              )}
             </div>
           ))}
         </section>
@@ -138,35 +149,42 @@ export default function ATSResumeTemplate({ data, locale }: ATSResumeProps) {
         <section style={{ marginBottom: '20px' }}>
           <SectionTitle title={isAr ? 'التعليم' : 'EDUCATION'} />
           {education.map((edu) => (
-            <div key={edu.id} style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between' }}>
-              <div>
-                <strong style={{ fontSize: '11pt' }}>
-                  {isAr ? edu.degree_ar : edu.degree_en}
-                  {edu.field_en && <span style={{ fontWeight: 'normal', color: '#555' }}>
-                    {' — '}{isAr ? edu.field_ar : edu.field_en}
-                  </span>}
-                </strong>
-                <div style={{ fontSize: '10pt', color: '#555' }}>
-                  {isAr ? edu.institution_ar : edu.institution_en}
-                </div>
-                {edu.gpa && (
-                  <div style={{ fontSize: '9pt', color: '#666' }}>
-                    {t.education.gpa}: {edu.gpa}
+            <div key={edu.id} style={{ marginBottom: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <strong style={{ fontSize: '11pt' }}>
+                    {isAr ? edu.degree_ar : edu.degree_en}
+                    {edu.field_en && <span style={{ fontWeight: 'normal', color: '#555' }}>
+                      {' — '}{isAr ? edu.field_ar : edu.field_en}
+                    </span>}
+                  </strong>
+                  <div style={{ fontSize: '10pt', color: '#555' }}>
+                    {isAr ? edu.institution_ar : edu.institution_en}
                   </div>
-                )}
+                </div>
+                <span style={{ fontSize: '9pt', color: '#666', whiteSpace: 'nowrap', marginLeft: '8px' }}>
+                  {formatDate(edu.start_date, locale)} – {edu.is_current ? t.experience.present : formatDate(edu.end_date, locale)}
+                </span>
               </div>
-              <span style={{ fontSize: '9pt', color: '#666', whiteSpace: 'nowrap', marginLeft: '8px' }}>
-                {formatDate(edu.start_date, locale)} – {edu.is_current ? t.experience.present : formatDate(edu.end_date, locale)}
-              </span>
+              {(isAr ? edu.description_ar : edu.description_en) && (
+                <p style={{ fontSize: '9pt', color: '#333', margin: '2px 0 0 0', fontStyle: 'italic' }}>
+                  {isAr ? edu.description_ar : edu.description_en}
+                </p>
+              )}
+              {edu.gpa && (
+                <div style={{ fontSize: '9pt', color: '#666', marginTop: '2px' }}>
+                  {t.education.gpa}: {edu.gpa}
+                </div>
+              )}
             </div>
           ))}
         </section>
       )}
 
-      {/* Certifications */}
-      {certifications.length > 0 && (
+      {/* Certifications & Courses */}
+      {(certifications.length > 0 || courses.length > 0) && (
         <section>
-          <SectionTitle title={isAr ? 'الشهادات' : 'CERTIFICATIONS'} />
+          <SectionTitle title={isAr ? 'الشهادات والدورات' : 'CERTIFICATIONS & COURSES'} />
           {certifications.map((cert) => (
             <div key={cert.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '10pt' }}>
               <span>
@@ -175,6 +193,24 @@ export default function ATSResumeTemplate({ data, locale }: ATSResumeProps) {
               </span>
               {cert.issue_date && (
                 <span style={{ fontSize: '9pt', color: '#666' }}>{formatDate(cert.issue_date, locale)}</span>
+              )}
+            </div>
+          ))}
+          {courses.map((course) => (
+            <div key={course.id} style={{ marginBottom: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <span>
+                  <strong>{isAr ? course.name_ar : course.name_en}</strong>
+                  {' — '}{isAr ? course.provider_ar : course.provider_en}
+                </span>
+                {course.completion_date && (
+                  <span style={{ fontSize: '9pt', color: '#666' }}>{formatDate(course.completion_date, locale)}</span>
+                )}
+              </div>
+              {(isAr ? course.description_ar : course.description_en) && (
+                <p style={{ fontSize: '9pt', color: '#444', margin: '1px 0 0 0' }}>
+                  {isAr ? course.description_ar : course.description_en}
+                </p>
               )}
             </div>
           ))}

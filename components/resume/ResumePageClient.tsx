@@ -35,29 +35,37 @@ export default function ResumePageClient({ locale }: ResumePageClientProps) {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: resumeRef.current.scrollWidth,
-        windowHeight: resumeRef.current.scrollHeight,
+        logging: false,
+        onclone: (clonedDoc) => {
+          // Ensure cloned element is visible and properly sized
+          const resume = clonedDoc.querySelector('[data-resume-template]') as HTMLElement;
+          if (resume) {
+            resume.style.margin = '0';
+            resume.style.padding = '40px';
+          }
+        }
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgProps = pdf.getImageProperties(imgData);
-      const imgHeightMm = (imgProps.height * pdfWidth) / imgProps.width;
-
-      let heightLeft = imgHeightMm;
+      
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
       let position = 0;
 
-      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeightMm);
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
       heightLeft -= pdfHeight;
 
+      // Add subsequent pages if content overflows A4 height
       while (heightLeft > 0) {
         position -= pdfHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeightMm);
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
         heightLeft -= pdfHeight;
       }
 
