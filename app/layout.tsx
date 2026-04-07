@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 import { stack } from '@/lib/stack';
 import { StackProvider } from '@stackframe/stack';
 import VisitorTracker from '@/components/ui/VisitorTracker';
+import { Analytics } from '@vercel/analytics/next';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <VisitorTracker />
           </Suspense>
         </StackProvider>
+        <Analytics />
       </body>
     </html>
   );
