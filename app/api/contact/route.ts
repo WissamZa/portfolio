@@ -22,6 +22,35 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
 
+    const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
+    const telegramChatId = process.env.TELEGRAM_CHAT_ID;
+    if (telegramBotToken && telegramChatId) {
+      try {
+        const text = `📬 <b>New Contact Message</b>\n\n` +
+                     `<b>Name:</b> ${parsed.data.name}\n` +
+                     `<b>Email:</b> ${parsed.data.email}\n` +
+                     `<b>Subject:</b> ${parsed.data.subject || 'N/A'}\n` +
+                     `<b>Message:</b>\n${parsed.data.message}`;
+                     
+        const tgRes = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            chat_id: telegramChatId, 
+            text,
+            parse_mode: 'HTML'
+          })
+        });
+        
+        if (!tgRes.ok) {
+          const errorData = await tgRes.json();
+          console.error('Telegram API error:', errorData);
+        }
+      } catch (tgError) {
+        console.error('Failed to send to Telegram:', tgError);
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Contact API error:', error);

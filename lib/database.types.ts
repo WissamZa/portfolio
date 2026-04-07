@@ -11,6 +11,7 @@ export interface Database {
       certifications: { Row: Certification; Insert: Omit<Certification, 'id' | 'created_at'>; Update: Partial<Certification> };
       courses: { Row: Course; Insert: Omit<Course, 'id' | 'created_at' | 'updated_at'>; Update: Partial<Course> };
       contact_messages: { Row: ContactMessage; Insert: Omit<ContactMessage, 'id' | 'created_at'>; Update: Partial<ContactMessage> };
+      visitors: { Row: Visitor; Insert: Omit<Visitor, 'id' | 'created_at'>; Update: Partial<Visitor> };
     };
   };
 }
@@ -131,6 +132,18 @@ export interface ContactMessage {
   subject: string | null;
   message: string;
   is_read: boolean;
+  created_at: string;
+}
+
+export interface Visitor {
+  id: string;
+  ip: string | null;
+  country: string | null;
+  city: string | null;
+  browser: string | null;
+  os: string | null;
+  url: string | null;
+  referrer: string | null;
   created_at: string;
 }
 

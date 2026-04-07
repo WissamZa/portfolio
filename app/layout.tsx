@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 
 import { stack } from '@/lib/stack';
 import { StackProvider } from '@stackframe/stack';
+import VisitorTracker from '@/components/ui/VisitorTracker';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <StackProvider app={stack}>
           <Suspense fallback={<div className="min-h-screen bg-void" />}>
             {children}
+            <VisitorTracker />
           </Suspense>
         </StackProvider>
       </body>

@@ -4,10 +4,10 @@ import { requireAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidateCache } from '@/lib/cache';
 
-type TableName = 'profiles' | 'projects' | 'skills' | 'experience' | 'education' | 'certifications' | 'courses' | 'contact_messages' | 'audit_logs';
+type TableName = 'profiles' | 'projects' | 'skills' | 'experience' | 'education' | 'certifications' | 'courses' | 'contact_messages' | 'audit_logs' | 'visitors';
 
 const VALID_TABLES: TableName[] = [
-  'profiles', 'projects', 'skills', 'experience', 'education', 'certifications', 'courses', 'contact_messages', 'audit_logs'
+  'profiles', 'projects', 'skills', 'experience', 'education', 'certifications', 'courses', 'contact_messages', 'audit_logs', 'visitors'
 ];
 
 function validateTable(table: string): table is TableName {

@@ -1,10 +1,11 @@
 import {
     LayoutDashboard, FolderCode, Cpu, Briefcase, GraduationCap,
-    MessageSquare, Award, User, Settings, ShieldCheck, BookOpen
+    MessageSquare, Award, User, Settings, ShieldCheck, BookOpen, BarChart3
 } from 'lucide-react';
 
 export const ADMIN_NAV_ITEMS = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', key: 'dashboard', color: 'text-neon-cyan' },
+    { href: '/dashboard/analytics', icon: BarChart3, label: 'Analytics', key: 'analytics', color: 'text-neon-cyan' },
     { href: '/dashboard/profile', icon: User, label: 'Profile', key: 'profile', color: 'text-neon-purple' },
     { href: '/dashboard/projects', icon: FolderCode, label: 'Projects', key: 'projects', color: 'text-neon-cyan' },
     { href: '/dashboard/skills', icon: Cpu, label: 'Skills', key: 'skills', color: 'text-neon-orange' },

@@ -181,6 +181,18 @@ CREATE TABLE IF NOT EXISTS "public"."courses" (
     "updated_at" timestamp with time zone DEFAULT "now"()
 );
 ALTER TABLE "public"."courses" OWNER TO "postgres";
+CREATE TABLE IF NOT EXISTS "public"."visitors" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "ip" "text",
+    "country" "text",
+    "city" "text",
+    "browser" "text",
+    "os" "text",
+    "url" "text",
+    "referrer" "text",
+    "created_at" timestamp with time zone DEFAULT "now"()
+);
+ALTER TABLE "public"."visitors" OWNER TO "postgres";
 ALTER TABLE ONLY "public"."skills"
 ALTER TABLE ONLY "public"."audit_logs"
 ADD CONSTRAINT "audit_logs_pkey" PRIMARY KEY ("id");
@@ -200,6 +212,8 @@ ALTER TABLE ONLY "public"."skills"
 ADD CONSTRAINT "skills_pkey" PRIMARY KEY ("id");
 ALTER TABLE ONLY "public"."courses"
 ADD CONSTRAINT "courses_pkey" PRIMARY KEY ("id");
+ALTER TABLE ONLY "public"."visitors"
+ADD CONSTRAINT "visitors_pkey" PRIMARY KEY ("id");
 CREATE INDEX "idx_education_order" ON "public"."education" USING "btree" ("order_index");
 CREATE INDEX "idx_experience_order" ON "public"."experience" USING "btree" ("order_index");
 CREATE INDEX "idx_messages_read" ON "public"."contact_messages" USING "btree" ("is_read");
@@ -224,6 +238,10 @@ CREATE POLICY "Public read skills" ON "public"."skills" FOR
 SELECT USING (true);
 CREATE POLICY "Public read courses" ON "public"."courses" FOR
 SELECT USING (true);
+CREATE POLICY "Public insert visitors" ON "public"."visitors" FOR
+INSERT WITH CHECK (true);
+CREATE POLICY "Service read visitors" ON "public"."visitors" FOR
+SELECT USING (true);
 ALTER TABLE "public"."audit_logs" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."certifications" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."contact_messages" ENABLE ROW LEVEL SECURITY;
@@ -233,6 +251,7 @@ ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."projects" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."skills" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."courses" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."visitors" ENABLE ROW LEVEL SECURITY;
 ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
 GRANT USAGE ON SCHEMA "public" TO "postgres";
 GRANT USAGE ON SCHEMA "public" TO "anon";
@@ -263,6 +282,9 @@ GRANT ALL ON TABLE "public"."skills" TO "service_role";
 GRANT ALL ON TABLE "public"."courses" TO "anon";
 GRANT ALL ON TABLE "public"."courses" TO "authenticated";
 GRANT ALL ON TABLE "public"."courses" TO "service_role";
+GRANT ALL ON TABLE "public"."visitors" TO "anon";
+GRANT ALL ON TABLE "public"."visitors" TO "authenticated";
+GRANT ALL ON TABLE "public"."visitors" TO "service_role";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public"
 GRANT ALL ON SEQUENCES TO "postgres";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public"
