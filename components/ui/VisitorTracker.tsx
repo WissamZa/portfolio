@@ -9,7 +9,6 @@ export default function VisitorTracker() {
     const hasTracked = sessionStorage.getItem('hasTrackedVisitor');
     
     if (!hasTracked || isDev) {
-      console.log('Tracking visitor...');
       fetch('/api/track', {
         method: 'POST',
         headers: {
@@ -21,7 +20,6 @@ export default function VisitorTracker() {
         }),
       }).then((res) => {
         if (!res.ok) throw new Error('Status ' + res.status);
-        console.log('Visitor tracked successfully');
         sessionStorage.setItem('hasTrackedVisitor', 'true');
       }).catch(err => {
         console.error('Visitor tracking failed:', err);

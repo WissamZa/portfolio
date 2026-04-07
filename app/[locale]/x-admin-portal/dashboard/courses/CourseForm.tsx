@@ -1,9 +1,8 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import { Upload, Loader, FileText } from 'lucide-react';
+import { Upload, Loader } from 'lucide-react';
 import type { Course } from '@/lib/database.types';
-import toast from 'react-hot-toast';
+import { useFileUpload } from '@/hooks/useFileUpload';
 
 interface CourseFormProps {
     editing: Partial<Course>;
@@ -11,36 +10,10 @@ interface CourseFormProps {
 }
 
 export function CourseForm({ editing, setEditing }: CourseFormProps) {
-    const [uploading, setUploading] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        setUploading(true);
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('folder', 'courses');
-
-        try {
-            const res = await fetch('/api/admin/upload', {
-                method: 'POST',
-                body: formData,
-            });
-            const data = await res.json();
-            if (data.url) {
-                setEditing({ ...editing, certificate_url: data.url });
-                toast.success('Certificate uploaded');
-            } else {
-                throw new Error(data.error || 'Upload failed');
-            }
-        } catch (err: any) {
-            toast.error('Upload failed: ' + err.message);
-        } finally {
-            setUploading(false);
-        }
-    };
+    const { uploading, fileInputRef, handleFileUpload } = useFileUpload({
+        folder: 'courses',
+        successMessage: 'Certificate uploaded',
+    });
 
     return (
         <div className="space-y-4">
@@ -154,7 +127,7 @@ export function CourseForm({ editing, setEditing }: CourseFormProps) {
                         type="file"
                         className="hidden"
                         accept="application/pdf,image/*"
-                        onChange={handleFileUpload}
+                        onChange={e => handleFileUpload(e, url => setEditing({ ...editing, certificate_url: url }))}
                     />
                     <button
                         type="button"

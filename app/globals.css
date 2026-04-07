@@ -303,3 +303,78 @@
     transform: rotate(360deg);
   }
 }
+/* ─────────────────────────────────────────────────────────────────
+   PHASE 4 — Extracted semantic utility classes (DRY refactor)
+   Each class below replaces a Tailwind string repeated 3+ times.
+   ───────────────────────────────────────────────────────────────── */
+@layer components {
+  /**
+   * .section-container — standard page-width container with responsive padding.
+   * Replaces: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" (7 occurrences)
+   */
+  .section-container {
+    max-width: 80rem; /* 7xl */
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .section-container {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .section-container {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+
+  /**
+   * .section-wrapper — section vertical padding + relative positioning.
+   * Replaces: "py-24 relative" (6 occurrences)
+   */
+  .section-wrapper {
+    position: relative;
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
+
+  /**
+   * .icon-btn — square icon button with glass border, muted colour, neon hover.
+   * Replaces: "w-10 h-10 border border-glass-border flex items-center justify-center
+   *            text-text-muted hover:text-neon-cyan hover:border-neon-cyan/50 transition-all"
+   * (5 occurrences)
+   */
+  .icon-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b; /* text-muted */
+    transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .icon-btn:hover {
+    color: var(--neon-cyan);
+    border-color: rgba(0, 245, 255, 0.5);
+  }
+
+  /**
+   * .form-label — shared admin form field label style.
+   * Replaces: "block text-xs font-mono text-text-muted mb-1" (20+ occurrences in forms)
+   */
+  .form-label {
+    display: block;
+    font-size: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+  }
+}

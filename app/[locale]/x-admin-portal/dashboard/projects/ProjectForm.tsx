@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { X, Upload, Loader } from 'lucide-react';
 import type { Project } from '@/lib/database.types';
-import toast from 'react-hot-toast';
+import { useFileUpload } from '@/hooks/useFileUpload';
 
 interface ProjectFormProps {
     editing: Partial<Project>;
@@ -12,51 +12,19 @@ interface ProjectFormProps {
 
 export function ProjectForm({ editing, setEditing }: ProjectFormProps) {
     const [techInput, setTechInput] = useState('');
-    const [uploading, setUploading] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        setUploading(true);
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('folder', 'projects');
-
-        try {
-            const res = await fetch('/api/admin/upload', {
-                method: 'POST',
-                body: formData,
-            });
-            const data = await res.json();
-            if (data.url) {
-                setEditing({ ...editing, image_url: data.url });
-                toast.success('Image uploaded');
-            } else {
-                throw new Error(data.error || 'Upload failed');
-            }
-        } catch (err: any) {
-            toast.error('Upload failed: ' + err.message);
-        } finally {
-            setUploading(false);
-        }
-    };
+    const { uploading, fileInputRef, handleFileUpload } = useFileUpload({
+        folder: 'projects',
+        successMessage: 'Image uploaded',
+    });
 
     const addTech = () => {
         if (!techInput.trim()) return;
-        setEditing({
-            ...editing,
-            tech_stack: [...(editing.tech_stack || []), techInput.trim()]
-        });
+        setEditing({ ...editing, tech_stack: [...(editing.tech_stack || []), techInput.trim()] });
         setTechInput('');
     };
 
     const removeTech = (t: string) => {
-        setEditing({
-            ...editing,
-            tech_stack: editing.tech_stack?.filter((x) => x !== t)
-        });
+        setEditing({ ...editing, tech_stack: editing.tech_stack?.filter((x) => x !== t) });
     };
 
     return (
@@ -172,7 +140,7 @@ export function ProjectForm({ editing, setEditing }: ProjectFormProps) {
                         type="file"
                         className="hidden"
                         accept="image/*"
-                        onChange={handleFileUpload}
+                        onChange={e => handleFileUpload(e, url => setEditing({ ...editing, image_url: url }))}
                     />
                     <button
                         type="button"
