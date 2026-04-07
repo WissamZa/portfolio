@@ -18,13 +18,14 @@ export async function isAdminAuthenticated(): Promise<boolean> {
   if (!user) return false;
 
   try {
-    const { data: profile } = await supabaseAdmin
+    const { data: profile, error } = await supabaseAdmin
       .from('profiles')
       .select('email')
-      .limit(1)
       .single();
 
-    return !!(user.primaryEmail && profile?.email && user.primaryEmail === profile.email);
+    if (error || !profile) return false;
+
+    return !!(user.primaryEmail && (profile as { email: string | null }).email && user.primaryEmail === (profile as { email: string | null }).email);
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('CRITICAL: Error verifying admin status:', err);
