@@ -28,14 +28,14 @@ export default function AboutSection({ profile, locale }: AboutProps) {
       <div className="absolute inset-0 bg-linear-to-b from-void via-void-2 to-void opacity-80" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className={cn('grid lg:grid-cols-2 gap-16 items-center', isAr && 'lg:grid-flow-col-dense')}>
+        <div className={cn('grid lg:grid-cols-3 gap-16 items-center', isAr && 'lg:grid-flow-col-dense')}>
           {/* Text side */}
           <motion.div
             initial={{ opacity: 0, x: isAr ? 30 : -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className={isAr ? 'text-right' : ''}
+            className={cn("col-span-2", isAr ? 'text-right' : '')}
           >
             <SectionHeader
               tag="// about"
@@ -87,7 +87,7 @@ export default function AboutSection({ profile, locale }: AboutProps) {
                   `border-${item.color}/30 bg-${item.color}/5 group-hover:border-${item.color}/60 transition-colors`
                 )}>
                   <item.icon
-                    size={20}
+                    size={22}
                     className={`text-${item.color} group-hover:scale-110 transition-transform`}
                   />
                 </div>

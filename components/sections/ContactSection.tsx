@@ -63,7 +63,8 @@ export default function ContactSection({ profile, locale }: ContactProps) {
 
             {profile?.email && (
               <a href={`mailto:${profile.email}`}
-                className="flex items-center justify-between w-full sm:w-80 gap-3 text-text-muted hover:text-neon-cyan transition-colors group">
+                className={cn("flex items-center flex-row-reverse justify-end w-full sm:w-80 gap-3 text-text-muted hover:text-neon-cyan transition-colors group", isAr && 
+              'text-right')}>
                 <span className="font-mono text-sm">{profile.email}</span>
                 <div className="w-10 h-10 border border-glass-border flex items-center justify-center group-hover:border-neon-cyan/50 transition-colors shrink-0">
                   <Mail size={16} />
@@ -73,7 +74,8 @@ export default function ContactSection({ profile, locale }: ContactProps) {
 
             {profile?.phone && (
               <a href={`tel:${profile.phone}`}
-                className="flex items-center justify-between w-full sm:w-80 gap-3 text-text-muted hover:text-neon-cyan transition-colors group">
+                className={cn("flex items-center flex-row-reverse justify-end w-full sm:w-80 gap-3 text-text-muted hover:text-neon-cyan transition-colors group", isAr && 
+              'text-right')}>
                 <span className="font-mono text-sm">{profile.phone}</span>
                 <div className="w-10 h-10 border border-glass-border flex items-center justify-center group-hover:border-neon-cyan/50 transition-colors shrink-0">
                   <Phone size={16} />
@@ -82,7 +84,8 @@ export default function ContactSection({ profile, locale }: ContactProps) {
             )}
 
             {(profile?.location_en || profile?.location_ar) && (
-              <div className="flex items-center justify-between w-full sm:w-80 gap-3 text-text-muted">
+              <div className={cn("flex items-center flex-row-reverse justify-end w-full sm:w-80 gap-3 text-text-muted hover:text-neon-cyan transition-colors group", isAr && 
+              'text-right')}>
                 <span className={cn('font-mono text-sm', isAr && 'font-arabic')}>
                   {isAr ? profile.location_ar : profile.location_en}
                 </span>

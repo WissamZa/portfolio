@@ -66,7 +66,7 @@ export default function Navbar({ locale }: NavbarProps) {
           </Link>
 
           {/* Desktop Nav */}
-          <div className={cn('hidden md:flex items-center gap-6', rtl && 'flex-row-reverse')}>
+          <div className={cn('hidden md:flex items-center gap-6')}>
             {navLinks.map((link) => (
               <a
                 key={link.href}
