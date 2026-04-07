@@ -103,18 +103,45 @@ export default function AdminSettings() {
   /* Passkey */
   const [passkeyStatus, setPasskeyStatus] = useState<Status>('idle');
   const [passkeyMsg, setPasskeyMsg] = useState('');
+  const [newPasskeyName, setNewPasskeyName] = useState('');
   const [removeStatus, setRemoveStatus] = useState<Status>('idle');
   const [removeMsg, setRemoveMsg] = useState('');
 
   const handleAddPasskey = async () => {
+    if (!newPasskeyName.trim()) {
+      setPasskeyStatus('error');
+      setPasskeyMsg('Please enter a name for the passkey');
+      setTimeout(() => setPasskeyStatus('idle'), 3000);
+      return;
+    }
+
     setPasskeyStatus('loading');
     try {
       const result = await (user as any)?.registerPasskey?.();
+      // Even if result.status is undefined, it might have worked if no error was thrown
+      // or if it returns ok. In 2.8.80, result might be { status: 'ok' } or result of WebAuthn.
+      
       if (result?.status === 'error') {
         throw new Error(result.error?.message ?? 'Registration failed');
       }
+
+      // Update metadata to include the new passkey name
+      const currentMetadata = await user?.clientMetadata ?? {};
+      const passkeyNames = [...(currentMetadata.passkey_names?.[user?.id ?? ''] || []), newPasskeyName];
+      
+      await user?.update({
+        clientMetadata: {
+          ...currentMetadata,
+          passkey_names: {
+            ...(currentMetadata.passkey_names || {}),
+            [user?.id ?? '']: passkeyNames
+          }
+        }
+      } as any);
+
       setPasskeyStatus('success');
       setPasskeyMsg('Passkey registered successfully');
+      setNewPasskeyName('');
     } catch (e: any) {
       setPasskeyStatus('error');
       setPasskeyMsg(e?.message ?? 'Failed to register passkey');
@@ -122,10 +149,44 @@ export default function AdminSettings() {
     setTimeout(() => setPasskeyStatus('idle'), 4000);
   };
 
-  const handleRemovePasskey = async () => {
+  const handleRemovePasskey = async (nameToRemove?: string) => {
     setRemoveStatus('loading');
     try {
-      await user?.update({ passkeyAuthEnabled: false } as any);
+      if (nameToRemove) {
+        // Just remove the name from metadata
+        const currentMetadata = await user?.clientMetadata ?? {};
+        const currentNames = currentMetadata.passkey_names?.[user?.id ?? ''] || [];
+        const newNames = currentNames.filter((n: string) => n !== nameToRemove);
+        
+        await user?.update({
+          clientMetadata: {
+            ...currentMetadata,
+            passkey_names: {
+              ...(currentMetadata.passkey_names || {}),
+              [user?.id ?? '']: newNames
+            }
+          }
+        } as any);
+
+        // If no names left, we could disable passkeys, but it's safer to let the user decide
+        if (newNames.length === 0) {
+          await user?.update({ passkeyAuthEnabled: false } as any);
+        }
+      } else {
+        // Fallback: disable all
+        await user?.update({ passkeyAuthEnabled: false } as any);
+        // Also clear names
+        const currentMetadata = await user?.clientMetadata ?? {};
+        await user?.update({
+          clientMetadata: {
+            ...currentMetadata,
+            passkey_names: {
+              ...(currentMetadata.passkey_names || {}),
+              [user?.id ?? '']: []
+            }
+          }
+        } as any);
+      }
       setRemoveStatus('success');
       setRemoveMsg('Passkey removed');
     } catch {
@@ -292,35 +353,73 @@ export default function AdminSettings() {
           />
         </div>
 
-        {/* Add passkey row */}
-        <div className="flex items-center justify-between pt-1">
-          <StatusBadge status={passkeyStatus} msg={passkeyMsg} />
-          <PrimaryButton
-            onClick={handleAddPasskey}
-            status={passkeyStatus}
-            accent="green"
-          >
-            <Plus size={13} />
-            {(user as any)?.passkeyAuthEnabled ? 'Add Another Passkey' : 'Register Passkey'}
-          </PrimaryButton>
-        </div>
-
-        {/* Remove passkey row — only shown when enabled */}
+        {/* List of Passkeys - Emulated via clientMetadata */}
         {(user as any)?.passkeyAuthEnabled && (
-          <div className="flex items-center justify-between border-t border-glass-border pt-4">
-            <div>
-              <p className="font-mono text-xs text-text-muted">Remove passkey</p>
-              <p className="font-mono text-[10px] text-text-muted/60">Disables passkey sign-in for this account</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <StatusBadge status={removeStatus} msg={removeMsg} />
-              <DangerButton onClick={handleRemovePasskey}>
-                <X size={13} />
-                {removeStatus === 'loading' ? 'Removing…' : 'Remove Passkey'}
-              </DangerButton>
+          <div className="space-y-3">
+            <p className="font-mono text-[10px] text-text-muted uppercase tracking-widest px-1">Registered Keys</p>
+            <div className="grid gap-2">
+              {(user?.clientMetadata?.passkey_names?.[user?.id || ''] || ['Default Passkey']).map((name: string, idx: number) => (
+                <div key={idx} className="flex items-center justify-between p-3 bg-void-2 border border-glass-border/50 group hover:border-neon-green/30 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 flex items-center justify-center bg-neon-green/5 border border-neon-green/20">
+                      <KeyRound size={14} className="text-neon-green/60" />
+                    </div>
+                    <div>
+                      <p className="font-mono text-xs text-text-primary font-bold">{name}</p>
+                      <p className="font-mono text-[10px] text-text-muted/60">
+                        Active security token
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleRemovePasskey(name)}
+                    className="p-2 text-text-muted hover:text-red-400 hover:bg-red-400/5 transition-all opacity-0 group-hover:opacity-100"
+                    title="Remove this passkey name"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         )}
+
+        {/* Add passkey row */}
+        <div className="space-y-4 pt-2">
+          <Field label="New Passkey Name" hint="Give this passkey a recognizable name (e.g. 'MacBook TouchID')">
+            <div className="flex gap-2">
+              <NeonInput
+                value={newPasskeyName}
+                onChange={e => setNewPasskeyName(e.target.value)}
+                placeholder="Enter key name..."
+                accent="var(--neon-green)"
+              />
+              <PrimaryButton
+                onClick={handleAddPasskey}
+                status={passkeyStatus}
+                accent="green"
+              >
+                <Plus size={13} />
+                {(user as any)?.passkeyAuthEnabled ? 'Add' : 'Register'}
+              </PrimaryButton>
+            </div>
+          </Field>
+          <div className="flex justify-start">
+            <StatusBadge status={passkeyStatus} msg={passkeyMsg} />
+          </div>
+        </div>
+
+        {/* Overall Removal/Status Alert */}
+        <div className="mt-4 p-4 border border-neon-green/10 bg-neon-green/5 flex gap-3 items-start">
+          <Shield size={16} className="text-neon-green/60 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-mono text-[11px] text-text-primary uppercase tracking-wider font-bold">Passkey Security Note</p>
+            <p className="font-mono text-[10px] text-text-muted/80 leading-relaxed">
+              Passkeys use cryptographic keys stored on your device. They are more secure than passwords and resistant to phishing. 
+              Make sure to enable <span className="text-neon-green">WebAuthn</span> in your Stack Auth project settings.
+            </p>
+          </div>
+        </div>
       </Section>
 
       {/* ── Notification Prefs ── */}
